@@ -1,0 +1,78 @@
+{
+  "name": "djokwa-middleware",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "private": true,
+  "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/cors": "^2.8.13",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.21.0"
+  },
+  "scripts": {
+    "server-pre": "npm install && npm install --prefix server",
+    "start": "ts-node src/index.ts",
+    "build:prod": "npm run build && (cd server && npm run build)",
+    "check-types": "tsc --pretty --noEmit",
+    "check-format": "prettier --check .",
+    "check-lint": "eslint . --ext ts --ext tsx --ext js",
+    "format": "prettier --write .",
+    "test-all": "npm run check-format && npm run check-lint && npm run check-types && npm run build",
+    "commit": "git-cz",
+    "prepare": "husky install",
+    "lint": "eslint ./src",
+    "lint:debug": "eslint ./src --debug",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "eslintConfig": {},
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.7.1",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@types/babel__core": "^7.20.0",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "autoprefixer": "^10.4.19",
+    "babel-plugin-named-exports-order": "^0.0.2",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
+    "postcss": "^8.4.38",
+    "prettier": "^2.8.7",
+    "prop-types": "^15.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "uuid-browser": "^3.1.0",
+    "webpack": "^5.76.3"
+  },
+  "description": "-   **Perequisites: make sure you have docker & docker compose installed\r     locally**\r -   Clone the staging branch of this repository.\r -   Open the project in your favourite code editor _preferrably Visual Studio\r     Code_.",
+  "main": "commitlint.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
