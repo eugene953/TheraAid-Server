@@ -40,29 +40,15 @@ export const fetchAllAuctionsQuery = async (): Promise<Auction[]> => {
 };
 
 // getting auction details by ID
-export const getAuctionById = async (id: string): Promise<Auction | null> => {
+export const fetchAuctionById = async (id: number): Promise<Auction | null> => {
   try {
-    const result = await pool.query('SELECT * FROM auctions WHERE id = $1', [
-      id,
-    ]);
-    if (result.rows.length === 0) {
-      return null;
-    }
+    const query = 'SELECT * FROM auctions WHERE id = $1';
+    const values = [id]; // Using the numeric ID here
+    const result = await pool.query(query, values);
 
-    const auction = result.rows[0];
-    return {
-      id: auction.id,
-      title: auction.title,
-      description: auction.description,
-      category: auction.category,
-      start_bid: auction.start_bid,
-      grade: auction.grade,
-      start_date: auction.start_date,
-      end_date: auction.end_date,
-      image: auction.image,
-    };
+    return result.rows[0] || null;
   } catch (error) {
-    console.error('Error fetching auction:', error);
-    throw new Error('Unable to fetch auction');
+    console.error('Error fetching auction by ID:', error);
+    throw error;
   }
 };

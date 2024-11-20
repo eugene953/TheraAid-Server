@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { createAuction, getAllAuctions } from '../services/auctionService';
 import { Auction } from '../types/auctionTypes';
-import { getAuctionById } from '../models/auctionModel';
+import { fetchAuctionById } from '../models/auctionModel';
 import { AuctionResponse } from '../types/auctionTypes';
 
 export const createAuctionController = async (req: Request, res: Response) => {
@@ -30,11 +30,27 @@ export const getAllAuctionsController = async (req: Request, res: Response) => {
   }
 };
 
-export const getAuctionDetails = async (id: string): Promise<any> => {
+export const getAuction = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log('Received auction ID:', id);
+
+  // Converting the id to a number
+  const numericId = parseInt(id, 10);
+
+  if (isNaN(numericId)) {
+    return res
+      .status(400)
+      .json({ error: 'Invalid auction ID. ID must be a number.' });
+  }
+
   try {
-    const auction = await getAuctionById(id); // Fetch auction by ID from database
-    return auction;
+    const auction = await fetchAuctionById(numericId);
+    if (!auction) {
+      return res.status(404).json({ error: 'Auction not found' });
+    }
+    res.status(200).json(auction);
   } catch (error) {
-    throw new Error('Error fetching auction details');
+    console.error('Error fetching auction:', error);
+    res.status(500).json({ error: 'Unable to fetch auction' });
   }
 };

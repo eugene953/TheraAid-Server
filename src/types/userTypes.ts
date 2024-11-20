@@ -1,11 +1,11 @@
 export interface UserProps {
   username: string;
   email: string;
-  phoneNumber: string;
-  idCardNumber: number;
+  phone_number: string;
+  id_card_number: number;
   address: string;
   password: string;
-  confirmPassword: string;
+  confirm_pwd: string;
 }
 
 export interface UserLoginProps {

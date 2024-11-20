@@ -14,6 +14,7 @@
     "joi": "^17.13.3",
     "joi-password-complexity": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "nodemon": "^3.1.7",
     "pg": "^8.13.1"
   },
@@ -57,6 +58,7 @@
     "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^5.57.0",

@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import {
   createAuctionController,
   getAllAuctionsController,
-  getAuctionDetails,
+  getAuction,
 } from '../controllers/auctionController';
 
 const router = express.Router();
@@ -23,6 +23,15 @@ router.get('/auctions/fetch', async (req: Request, res: Response) => {
     await getAllAuctionsController(req, res);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching auctions', error });
+  }
+});
+
+router.get('/fetch/:id', async (req: Request, res: Response) => {
+  try {
+    await getAuction(req, res);
+  } catch (error) {
+    console.error('Error in route handler:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
