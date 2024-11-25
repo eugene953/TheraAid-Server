@@ -23,6 +23,10 @@ app.post('/api/users/register', (req: Request, res: Response) => {
   res.send('User API is running!');
 });
 
+app.post('/api/users/login', (req: Request, res: Response) => {
+  res.send('User API is running!');
+});
+
 /** Auction post, get and getting by id   */
 app.use('/api/auctions', auctionRoutes);
 

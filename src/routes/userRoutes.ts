@@ -9,6 +9,9 @@ import {
   updateUserController,
   resetPasswordController,
 } from '../controllers/userController';
+import pool from '../config/database';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -21,6 +24,15 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
+// post request
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    await loginController(req, res);
+  } catch (error) {
+    res.status(500).json({ message: 'An unexpected error occurred', error });
+  }
+});
+
 /**router.route('/registerMail').post((req:Request, res:Response) => {
     res.json('register route')
 }); */
@@ -28,7 +40,6 @@ router.post('/register', async (req: Request, res: Response) => {
 router.route('/authenticate').post((req: Request, res: Response) => {
   res.json('register route');
 });
-router.route('/login').post(loginController);
 
 /** GET methods */
 
