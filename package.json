@@ -1,19 +1,26 @@
 {
-  "name": "djokwa-middleware",
+  "name": "kako-bid-middleware",
   "version": "0.1.0",
   "type": "commonjs",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@types/cors": "^2.8.13",
+    "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
-    "express": "^4.21.0"
+    "express": "^4.21.1",
+    "hbs": "^4.2.0",
+    "joi": "^17.13.3",
+    "joi-password-complexity": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.1.7",
+    "pg": "^8.13.1"
   },
   "scripts": {
     "server-pre": "npm install && npm install --prefix server",
-    "start": "ts-node src/index.ts",
+    "start": "nodemon --exec ts-node src/index.ts",
     "build:prod": "npm run build && (cd server && npm run build)",
     "check-types": "tsc --pretty --noEmit",
     "check-format": "prettier --check .",
@@ -49,7 +56,11 @@
     "@commitlint/config-conventional": "^17.7.0",
     "@types/babel__core": "^7.20.0",
     "@types/cookie-parser": "^1.4.3",
-    "@types/node": "^22.5.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.9.0",
+    "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
     "autoprefixer": "^10.4.19",
@@ -66,7 +77,7 @@
     "prettier": "^2.8.7",
     "prop-types": "^15.8.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2",
+    "typescript": "^5.6.3",
     "uuid-browser": "^3.1.0",
     "webpack": "^5.76.3"
   },
@@ -74,5 +85,13 @@
   "main": "commitlint.config.js",
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenTek-Startup/kako-bid-middleware.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OpenTek-Startup/kako-bid-middleware/issues"
+  },
+  "homepage": "https://github.com/OpenTek-Startup/kako-bid-middleware#readme"
 }
