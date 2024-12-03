@@ -1,20 +1,24 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { Request, Response, NextFunction } from 'express';
 import { JWT_SECRET_KEY } from './env_variable';
 dotenv.config();
 
-if (!JWT_SECRET_KEY) {
-  throw new Error(
-    'Environment variable JWT_SECRET_KEY is missing. Please define it in the .env file.'
-  );
-}
+export const authenticateUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication token missing' });
+  }
 
-export const generateJWT = (userId: number): string => {
   try {
-    // Generate a signed JWT using the secret key
-    return jwt.sign({ id: userId }, JWT_SECRET_KEY, { expiresIn: '1h' });
+    const decoded = jwt.verify(token, JWT_SECRET_KEY) as { id: number };
+    req.body.user_id = decoded.id; // Attach userId to the request body
+    next();
   } catch (error) {
-    console.error('Error generating JWT:', error);
-    throw new Error('Failed to generate token.');
+    res.status(403).json({ message: 'Invalid or expired token' });
   }
 };

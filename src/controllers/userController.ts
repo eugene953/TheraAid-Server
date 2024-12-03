@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { registerUser } from '../services/userService';
 import pool from '../config/database';
 import bcrypt from 'bcrypt';
-import { generateJWT } from '../utils/jwtUtils';
+import { authenticateUser } from '../utils/jwtUtils';
 
 export const registerUserController = async (req: Request, res: Response) => {
   try {
@@ -35,8 +35,8 @@ export const loginController = async (req: Request, res: Response) => {
     }
 
     // Generate the JWT token
-    const token = generateJWT(user.id);
-    console.log('Generated JWT:', token);
+    const token = authenticateUser;
+    console.log('authenticate and generate JWT:', token);
 
     // Returning login success with token
     return res.status(200).json({
