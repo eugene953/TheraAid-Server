@@ -6,6 +6,7 @@ export interface UserProps {
   address: string;
   password: string;
   confirm_pwd: string;
+  profile: string | null;
 }
 
 export interface UserLoginProps {
