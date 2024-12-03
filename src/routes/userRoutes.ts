@@ -33,6 +33,15 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+/** GET methods */
+router.get('/user/:username', async (req: Request, res: Response) => {
+  try {
+    await getUserController(req, res);
+  } catch (error) {
+    res.status(500).json({ message: 'An unexpected error occurred', error });
+  }
+});
+
 /**router.route('/registerMail').post((req:Request, res:Response) => {
     res.json('register route')
 }); */
