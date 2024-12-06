@@ -15,7 +15,45 @@ import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
-// POST methods
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone_number:
+ *                 type: string
+ *               id_card_number:
+ *                 type: number
+ *               address:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               confirm_pwd:
+ *                 type: string
+ *               profile:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *       400:
+ *         description: Bad Request
+ *       500:
+ *         description: Internal Server Error
+ */
 router.post('/register', async (req: Request, res: Response) => {
   try {
     await registerUserController(req, res);
@@ -24,6 +62,28 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Login an existing user
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User logged in successfully
+ */
 // post request
 router.post('/login', async (req: Request, res: Response) => {
   try {

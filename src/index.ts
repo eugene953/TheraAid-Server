@@ -2,12 +2,17 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
+import http from 'http';
+import { Server } from 'socket.io';
+
 import auctionRoutes from './routes/auctionRoutes';
 import userRoutes from './routes/userRoutes';
 import bidRoutes from './routes/bidRoutes';
 import { getAllAuctions } from './services/auctionService';
-import http from 'http';
-import { Server } from 'socket.io';
+import options from './utils/swaggerConfig';
+
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 dotenv.config();
 
@@ -20,17 +25,20 @@ const io = new Server(server, {
   },
 });
 
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json());
 app.use(morgan('tiny'));
 
+// Swagger setup
+const swaggerDocs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 {
   /** user authentication Routes */
 }
 app.use('/api/users', userRoutes);
-
 app.post('/api/users/register', (req: Request, res: Response) => {
   res.send('User API is running!');
 });
@@ -65,6 +73,12 @@ app.get('/api/auctions/fetch/:id', (req: Request, res: Response) => {
 {
   /**  bid Routes */
 }
+/**
+ * @swagger
+ * tags:
+ *   - name: Bids
+ *     description: Bid operations
+ */
 app.use('/api/bids', bidRoutes);
 
 server.listen(PORT, () => {
