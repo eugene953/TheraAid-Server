@@ -19,7 +19,10 @@
     "nodemon": "^3.1.7",
     "openssl": "^2.0.0",
     "pg": "^8.13.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.6.1"
   },
   "scripts": {
     "server-pre": "npm install && npm install --prefix server",
@@ -67,6 +70,8 @@
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",
     "@types/socket.io": "^3.0.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.7",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
     "autoprefixer": "^10.4.19",
