@@ -7,7 +7,13 @@ import { authenticateUser } from '../utils/jwtUtils';
 export const registerUserController = async (req: Request, res: Response) => {
   try {
     const newUser = await registerUser(req.body);
-    res.status(201).json({ success: true, data: newUser });
+
+    res.status(201).json({
+      success: true,
+      user_id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+    });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -41,7 +47,11 @@ export const loginController = async (req: Request, res: Response) => {
     // Returning login success with token
     return res.status(200).json({
       message: 'Login successful',
-      user: { username: user.username, email: user.email },
+      user: {
+        user_id: user.id,
+        username: user.username,
+        email: user.email,
+      },
       token,
     });
   } catch (error) {
