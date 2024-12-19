@@ -2,17 +2,26 @@ import pool from '../config/database';
 import { bidType } from '../types/bidTypes';
 
 export const createBidQuery = async (bidData: bidType): Promise<bidType> => {
-  const { auction_id, user_id, bid_amount } = bidData;
+  const { user_id, auction_id, bid_amount } = bidData;
 
   if (!Number.isInteger(user_id)) {
     throw new Error('Invalid user_id. Must be an integer.');
   }
+  console.log('Creating bid with data:', bidData);
 
-  const query = `INSERT INTO bids (auction_id, user_id, bid_amount, bid_time) 
+  // check if auction exists
+  const auctionQuery = 'SELECT * FROM auctions WHERE id = $1';
+  const result = await pool.query(auctionQuery, [auction_id]);
+
+  if (result.rows.length === 0) {
+    throw new Error(`Auction with ID ${auction_id} does not exist.`);
+  }
+
+  const query = `INSERT INTO bids (user_id, auction_id,  bid_amount, bid_time) 
  VALUES ($1, $2, $3, NOW()) 
  RETURNING *;
  `;
-  const values = [auction_id, user_id, bid_amount];
+  const values = [user_id, auction_id, bid_amount];
 
   try {
     const { rows } = await pool.query(query, values);

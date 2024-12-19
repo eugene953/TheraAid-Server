@@ -5,13 +5,20 @@ import { bidType } from '../types/bidTypes';
 import { io } from '../server';
 
 export const placeBid = async (req: Request, res: Response) => {
-  const { auction_id, bid_amount, user_id }: bidType = req.body;
-
-  if (!Number.isInteger(user_id)) {
-    return res.status(400).json({ message: 'Invalid user ID.' });
-  }
-
   try {
+    const { auction_id, bid_amount } = req.body;
+
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user_id = parseInt(req.user.id, 10);
+
+    if (isNaN(user_id)) {
+      return res.status(400).json({ error: 'Invalid User ID' });
+    }
+    console.log('validated user_id:', user_id);
+
     const currentBid = await getHighestBid(auction_id);
 
     if (bid_amount <= currentBid) {

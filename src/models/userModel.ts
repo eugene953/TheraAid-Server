@@ -6,7 +6,6 @@ import { UserProps } from '../types/userTypes';
 
 export const userQuery = async (userData: UserProps): Promise<UserProps> => {
   const {
-    id,
     username,
     email,
     phone_number,
@@ -18,8 +17,8 @@ export const userQuery = async (userData: UserProps): Promise<UserProps> => {
   } = userData;
 
   const query = `
-  INSERT INTO users (id, username, email, phone_number, id_card_number, address, password, confirm_pwd, profile)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  INSERT INTO users (username, email, phone_number, id_card_number, address, password, confirm_pwd, profile)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8 )
   RETURNING *;
 `;
 
@@ -55,7 +54,6 @@ export const userQuery = async (userData: UserProps): Promise<UserProps> => {
     const hashedConfirmPwd = await bcrypt.hash(confirm_pwd, saltRounds);
 
     const values = [
-      id,
       username,
       email,
       phone_number,

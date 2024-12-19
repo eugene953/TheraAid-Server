@@ -1,5 +1,7 @@
-import { Router } from 'express';
+import express, { Router, Request, Response, NextFunction } from 'express';
 import * as bidController from '../controllers/bidController';
+import { asyncHandler } from '../utils/asyncHandler';
+import Auth from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -43,13 +45,17 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.post('/', async (req, res) => {
-  try {
-    await bidController.placeBid(req, res);
-  } catch (error) {
-    res.status(500).json({ message: 'Error placing bid', error });
-  }
-});
+router.post(
+  '/',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await bidController.placeBid(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error placing bid', error });
+    }
+  })
+);
 
 router.get('/test', (req, res) => {
   res.send('Bid API is working!');
