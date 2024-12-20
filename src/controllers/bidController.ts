@@ -5,9 +5,20 @@ import { bidType } from '../types/bidTypes';
 import { io } from '../server';
 
 export const placeBid = async (req: Request, res: Response) => {
-  const { auction_id, user_id, bid_amount }: bidType = req.body;
-
   try {
+    const { auction_id, bid_amount } = req.body;
+
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user_id = parseInt(req.user.id, 10);
+
+    if (isNaN(user_id)) {
+      return res.status(400).json({ error: 'Invalid User ID' });
+    }
+    console.log('validated user_id:', user_id);
+
     const currentBid = await getHighestBid(auction_id);
 
     if (bid_amount <= currentBid) {
@@ -22,7 +33,7 @@ export const placeBid = async (req: Request, res: Response) => {
       bid_amount,
     });
 
-    // Emit real-time updates to all client via Socket.IO
+    // Emiting real-time updates to all client via Socket.IO
     io.emit('bidUpdates', {
       auction_id,
       amount: bid_amount,
@@ -30,6 +41,7 @@ export const placeBid = async (req: Request, res: Response) => {
 
     res.status(201).json(newBid);
   } catch (error) {
+    console.error('Error placing bid:', error);
     res.status(500).json({ message: 'Error placing bid', error });
   }
 };

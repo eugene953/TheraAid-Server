@@ -3,10 +3,14 @@ import { createAuction, getAllAuctions } from '../services/auctionService';
 import { Auction } from '../types/auctionTypes';
 import { fetchAuctionById } from '../models/auctionModel';
 import { AuctionResponse } from '../types/auctionTypes';
+// import { upload } from '../middleware/imageUploadMiddleware';
 
 export const createAuctionController = async (req: Request, res: Response) => {
   try {
-    const auctionData: Auction = req.body;
+    const auctionData: Auction = {
+      ...req.body,
+      image: req.file?.path || '',
+    };
     const newAuction = await createAuction(auctionData);
     return res
       .status(201)

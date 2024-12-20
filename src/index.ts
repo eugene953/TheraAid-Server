@@ -13,6 +13,13 @@ import options from './utils/swaggerConfig';
 
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import {
+  getUserController,
+  updateUserController,
+} from './controllers/userController';
+import Auth from './middleware/authMiddleware';
+import { asyncHandler } from './utils/asyncHandler';
+import path from 'path';
 
 dotenv.config();
 
@@ -47,10 +54,34 @@ app.post('/api/users/login', (req: Request, res: Response) => {
   res.send('User API is running!');
 });
 
+app.get('/api/user/:username', async (req: Request, res: Response) => {
+  try {
+    await getUserController(req, res);
+  } catch (error) {
+    console.error('Error fetching auctions:', error);
+    res.status(500).json({ message: 'Error fetching auctions' });
+  }
+});
+
+app.put(
+  '/api/updateUser',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await updateUserController(req, res);
+    } catch (error) {
+      console.error('Error fetching auctions:', error);
+      res.status(500).json({ message: 'Error fetching auctions' });
+    }
+  })
+);
+
 {
   /**  Auction Routes post, get and getting by id   */
 }
 app.use('/api/auctions', auctionRoutes);
+
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 app.post('/api/auctions/create', (req: Request, res: Response) => {
   res.send('Auction API is running!');
@@ -73,12 +104,6 @@ app.get('/api/auctions/fetch/:id', (req: Request, res: Response) => {
 {
   /**  bid Routes */
 }
-/**
- * @swagger
- * tags:
- *   - name: Bids
- *     description: Bid operations
- */
 app.use('/api/bids', bidRoutes);
 
 server.listen(PORT, () => {

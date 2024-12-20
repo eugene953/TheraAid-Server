@@ -18,7 +18,7 @@ export const userQuery = async (userData: UserProps): Promise<UserProps> => {
 
   const query = `
   INSERT INTO users (username, email, phone_number, id_card_number, address, password, confirm_pwd, profile)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8 )
   RETURNING *;
 `;
 

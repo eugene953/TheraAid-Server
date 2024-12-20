@@ -4,6 +4,12 @@ import { Request, Response, NextFunction } from 'express';
 import { JWT_SECRET_KEY } from './env_variable';
 dotenv.config();
 
+// Generate a JWT token with user_id
+export const generateToken = (userId: number): string => {
+  return jwt.sign({ id: userId }, JWT_SECRET_KEY, { expiresIn: '1h' });
+};
+
+// Middleware authenticate user by verifying the token
 export const authenticateUser = (
   req: Request,
   res: Response,
