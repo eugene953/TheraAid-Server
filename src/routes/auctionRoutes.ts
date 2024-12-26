@@ -3,9 +3,11 @@ import express, { Request, Response } from 'express';
 import {
   createAuctionController,
   getAllAuctionsController,
+  getAllProductOfUserController,
   getAuction,
 } from '../controllers/auctionController';
-import { upload } from '../middleware/imageUploadMiddleware';
+import Auth from '../middleware/authMiddleware';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
 
@@ -44,17 +46,13 @@ const router = express.Router();
  *       200:
  *         description: Auction created successfully
  */
-router.post(
-  '/create',
-  upload.single('image'),
-  async (req: Request, res: Response) => {
-    try {
-      await createAuctionController(req, res);
-    } catch (error) {
-      res.status(500).json({ message: 'Error creating auction', error });
-    }
+router.post('/create', async (req: Request, res: Response) => {
+  try {
+    await createAuctionController(req, res);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating auction', error });
   }
-);
+});
 
 /**
  * @swagger
@@ -140,5 +138,17 @@ router.get('/fetch/:id', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+router.get(
+  '/user',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllProductOfUserController(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'An unexpected error occurred', error });
+    }
+  })
+);
 
 export default router;

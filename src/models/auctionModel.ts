@@ -52,3 +52,24 @@ export const fetchAuctionById = async (id: number): Promise<Auction | null> => {
     throw error;
   }
 };
+
+// getting auction details by user ID
+export const fetchAuctionsByUserIdQuery = async (userId: number) => {
+  try {
+    const query = ` SELECT 
+        a.id, 
+        a.title AS auction_title, 
+        a.start_bid, 
+        a.image
+       FROM auctions AS a
+      INNER JOIN bids AS b ON a.id = b.auction_id
+      WHERE b.user_id = $1;
+    `;
+
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching auctions by user ID:', error);
+    throw new Error('Database query failed');
+  }
+};

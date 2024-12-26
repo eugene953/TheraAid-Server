@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import { Server } from 'socket.io';
 
 import auctionRoutes from './routes/auctionRoutes';
@@ -19,7 +21,7 @@ import {
 } from './controllers/userController';
 import Auth from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
-import path from 'path';
+import { getAllProductOfUserController } from './controllers/auctionController';
 
 dotenv.config();
 
@@ -81,8 +83,16 @@ app.put(
 }
 app.use('/api/auctions', auctionRoutes);
 
+{
+  /**
+const uploadDir = path.join(__dirname, 'src', 'middleware', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Uploads directory created:', uploadDir);
+}
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
-
+ */
+}
 app.post('/api/auctions/create', (req: Request, res: Response) => {
   res.send('Auction API is running!');
 });
@@ -100,6 +110,20 @@ app.get('/api/auctions/fetch', async (req, res) => {
 app.get('/api/auctions/fetch/:id', (req: Request, res: Response) => {
   res.send('Auction API is running!');
 });
+
+app.get(
+  '/api/user',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const data = await getAllProductOfUserController(req, res);
+      res.status(200).json({ data });
+    } catch (error) {
+      console.error('Error fetching auctions:', error);
+      res.status(500).json({ message: 'Error fetching auctions' });
+    }
+  })
+);
 
 {
   /**  bid Routes */

@@ -1,14 +1,14 @@
 import multer from 'multer';
 import path from 'path';
 
-// Set up storage configuration for multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads')); // Specify directory to save images
+    const uploadPath = path.join(__dirname, 'uploads');
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    // Use current timestamp to avoid filename conflicts
-    cb(null, `${Date.now()}-${file.originalname}`);
+    const uniqueSuffix = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueSuffix);
   },
 });
 
