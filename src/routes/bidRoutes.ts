@@ -16,6 +16,15 @@ const router = Router();
  *     summary: Place a new bid
  *     tags:
  *       - Bids
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token (e.g., "Bearer {token}")
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:

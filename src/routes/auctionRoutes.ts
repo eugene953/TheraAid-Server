@@ -139,6 +139,54 @@ router.get('/fetch/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/user:
+ *   get:
+ *     summary: Get all auctions an authenticated user created
+ *     tags:
+ *       - user Auctions
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token (e.g., "Bearer {token}")
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved the user's auctions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 auctions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       title:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                         format: float
+ *                       image:
+ *                         type: string
+ *                         format: uri
+ *                       sold:
+ *                         type: boolean
+ *       '401':
+ *         description: Unauthorized. Missing or invalid user authentication.
+ *       '400':
+ *         description: Bad request. User ID is invalid.
+ *       '500':
+ *         description: Internal server error. Unable to fetch auctions.
+ */
 router.get(
   '/user',
   asyncHandler(Auth),

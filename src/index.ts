@@ -130,10 +130,6 @@ app.get(
 }
 app.use('/api/bids', bidRoutes);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
 // Set up Socket.IO event listeners
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -148,4 +144,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

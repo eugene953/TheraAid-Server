@@ -68,7 +68,7 @@ router.post('/register', async (req: Request, res: Response) => {
  * @swagger
  * /api/users/login:
  *   post:
- *     summary: Login an existing user
+ *     summary: Authenticate a user and return a JWT.
  *     tags:
  *       - Users
  *     requestBody:
@@ -83,8 +83,12 @@ router.post('/register', async (req: Request, res: Response) => {
  *               password:
  *                 type: string
  *     responses:
- *       200:
- *         description: User logged in successfully
+ *       '200':
+ *         description: Returns a JWT for successful login.
+ *       '400':
+ *         description: Invalid credentials provided.
+ *       '500':
+ *         description: Internal server error.
  */
 // post request
 router.post('/login', async (req: Request, res: Response) => {
@@ -162,6 +166,13 @@ router.get('/user/:username', async (req: Request, res: Response) => {
  *           description: The id of the user to update
  *           schema:
  *             type: integer
+ *         - in: header
+ *           name: Authorization
+ *           required: true
+ *           description: Bearer token for authorization
+ *           schema:
+ *             type: string
+ *             example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *       requestBody:
  *         required: true
  *         content:
