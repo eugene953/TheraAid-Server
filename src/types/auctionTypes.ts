@@ -7,6 +7,7 @@ export interface Auction {
   start_bid: number;
   start_date: Date;
   end_date: Date;
+  user_id: number;
   image: string;
 }
 

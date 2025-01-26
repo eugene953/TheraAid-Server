@@ -22,6 +22,7 @@ import {
 import Auth from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
 import { getAllProductOfUserController } from './controllers/auctionController';
+import { upload } from './utils/Cloudinary';
 
 dotenv.config();
 
@@ -93,9 +94,13 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
  */
 }
-app.post('/api/auctions/create', (req: Request, res: Response) => {
-  res.send('Auction API is running!');
-});
+app.post(
+  '/api/auctions/create',
+  upload.single('image'),
+  async (req: Request, res: Response) => {
+    res.send('Auction API is running!');
+  }
+);
 
 app.get('/api/auctions/fetch', async (req, res) => {
   try {
@@ -132,17 +137,23 @@ app.use('/api/bids', bidRoutes);
 
 // Set up Socket.IO event listeners
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('A user connected', socket.id);
 
-  // Listen for bid updates from clients (if needed)
+  // Handle bid event
   socket.on('sendBid', (data) => {
     console.log('Bid received:', data);
     io.emit('bidUpdates', data);
   });
 
+  // Handle notification event
+  socket.on('newNotification', (data) => {
+    console.log('Notification received:', data);
+    io.emit('newNotification', data);
+  });
+
   // Handle disconnections
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('User disconnected', socket.id);
   });
 });
 

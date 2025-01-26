@@ -5,11 +5,20 @@ import {
   fetchAuctionById,
   fetchAuctionsByUserIdQuery,
 } from '../models/auctionModel';
+import { upload } from '../utils/Cloudinary';
 import { AuctionResponse } from '../types/auctionTypes';
 
 export const createAuctionController = async (req: Request, res: Response) => {
   try {
     const auctionData: Auction = req.body;
+
+    // Retrieve the uploaded file URL from Cloudinary
+    if (req.file && req.file.path) {
+      auctionData.image = req.file.path; // Cloudinary provides a `path` property for the uploaded image URL
+    } else {
+      return res.status(400).json({ message: 'Image upload is required' });
+    }
+
     const newAuction = await createAuction(auctionData);
     return res
       .status(201)

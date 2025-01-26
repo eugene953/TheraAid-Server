@@ -3,6 +3,7 @@ import { createBidQuery, getHighestBid } from '../models/bidModel';
 import * as bidService from '../services/bidService';
 import { bidType } from '../types/bidTypes';
 import { io } from '../server';
+import { fetchAuctionById } from '../models/auctionModel';
 
 export const placeBid = async (req: Request, res: Response) => {
   try {
@@ -19,6 +20,19 @@ export const placeBid = async (req: Request, res: Response) => {
     }
     console.log('validated user_id:', user_id);
 
+    // fetch auction details to verify ownership
+    const auction = await fetchAuctionById(auction_id);
+    if (!auction) {
+      return res.status(404).json({ error: 'Auction not found' });
+    }
+
+    if (auction.user_id === user_id) {
+      return res
+        .status(403)
+        .json({ error: 'You cannot place a bid on your own auction' });
+    }
+
+    // Check current highest bid
     const currentBid = await getHighestBid(auction_id);
 
     if (bid_amount <= currentBid) {
@@ -33,10 +47,19 @@ export const placeBid = async (req: Request, res: Response) => {
       bid_amount,
     });
 
-    // Emiting real-time updates to all client via Socket.IO
+    // Emit real-time updates to all client via Socket.IO
     io.emit('bidUpdates', {
       auction_id,
-      amount: bid_amount,
+      bid_amount,
+      message: `New bid placed: ${bid_amount} XAF`,
+      bidderId: user_id,
+    });
+
+    // Emit a real-time notification to all users except the bidder
+    io.emit('newNotification', {
+      auction_id,
+      message: `A new bid of ${bid_amount} XAF has been placed!`,
+      exclude: user_id,
     });
 
     res.status(201).json(newBid);

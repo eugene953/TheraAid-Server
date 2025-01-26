@@ -16,6 +16,8 @@ export const createAuctionQuery = async (
     image,
   } = auctionData;
 
+  console.log('Auction Data Received:', auctionData);
+
   // Determine the initial status based on start and end dates
   let status: 'upcoming' | 'active' | 'ended';
 
@@ -45,6 +47,7 @@ export const createAuctionQuery = async (
     status,
   ];
   const { rows } = await pool.query(query, values);
+  console.log('Auction Created:', rows[0]);
   return rows[0];
 };
 
@@ -100,6 +103,7 @@ export const fetchAllAuctionsQuery = async (): Promise<Auction[]> => {
     FROM auctions;
   `;
   const { rows } = await pool.query(query);
+
   return rows;
 };
 

@@ -160,19 +160,15 @@ router.get('/user/:username', async (req: Request, res: Response) => {
  *       tags:
  *         - Users
  *       parameters:
- *         - in: query
- *           name: id
- *           required: true
- *           description: The id of the user to update
- *           schema:
- *             type: integer
  *         - in: header
  *           name: Authorization
  *           required: true
- *           description: Bearer token for authorization
+ *           description: >
+ *             Bearer token for authorization. The token must follow the format:
+ *             'Bearer <token>'. If the token is missing, invalid, or expired, the request will return a 401 Unauthorized error.
  *           schema:
  *             type: string
- *             example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *             example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzLCJpYXQiOjE2ODg5NzM0MjJ9...
  *       requestBody:
  *         required: true
  *         content:
@@ -182,26 +178,33 @@ router.get('/user/:username', async (req: Request, res: Response) => {
  *               properties:
  *                 username:
  *                   type: string
+ *                   example: Sone
  *                 email:
  *                   type: string
+ *                   example: sone@gmail.com
  *                 phone_number:
  *                   type: string
+ *                   example: 678765456
  *                 address:
  *                   type: string
+ *                   example: Bonaberi Douala
  *                 profile:
  *                   type: string
  *                   nullable: true
+ *                   example: null
  *               required:
  *                 - username
  *                 - email
  *                 - phone_number
  *                 - address
- *                 - profile
  *       responses:
  *         200:
  *           description: Successfully updated user information
  *         400:
  *           description: Missing user ID or required fields
+ *         401:
+ *           description: >
+ *             Unauthorized - Bearer token is missing, invalid, or expired
  *         404:
  *           description: User not found
  *         500:

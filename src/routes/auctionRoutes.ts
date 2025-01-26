@@ -8,6 +8,7 @@ import {
 } from '../controllers/auctionController';
 import Auth from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
+import { upload } from '../utils/Cloudinary';
 
 const router = express.Router();
 
@@ -46,13 +47,17 @@ const router = express.Router();
  *       200:
  *         description: Auction created successfully
  */
-router.post('/create', async (req: Request, res: Response) => {
-  try {
-    await createAuctionController(req, res);
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating auction', error });
+router.post(
+  '/create',
+  upload.single('image'),
+  async (req: Request, res: Response) => {
+    try {
+      await createAuctionController(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating auction', error });
+    }
   }
-});
+);
 
 /**
  * @swagger
