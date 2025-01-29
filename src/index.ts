@@ -21,8 +21,17 @@ import {
 } from './controllers/userController';
 import Auth from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
-import { getAllProductOfUserController } from './controllers/auctionController';
+import {
+  deleteAuctionByIDController,
+  getAllProductOfUserController,
+  repostAuction,
+  updateAuctionController,
+} from './controllers/auctionController';
+
+import * as bidController from './controllers/bidController';
+
 import { upload } from './utils/Cloudinary';
+import { getAuctionWinners } from './controllers/bidController';
 
 dotenv.config();
 
@@ -80,7 +89,7 @@ app.put(
 );
 
 {
-  /**  Auction Routes post, get and getting by id   */
+  /**  Auction Routes post, get and getting by id , delete  */
 }
 app.use('/api/auctions', auctionRoutes);
 
@@ -96,10 +105,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 }
 app.post(
   '/api/auctions/create',
+  asyncHandler(Auth),
   upload.single('image'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     res.send('Auction API is running!');
-  }
+  })
 );
 
 app.get('/api/auctions/fetch', async (req, res) => {
@@ -130,10 +140,62 @@ app.get(
   })
 );
 
-{
-  /**  bid Routes */
-}
+// Delete auction route
+app.delete(
+  '/auctions/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteAuctionByIDController(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'An unexpected error occurred during deletion',
+          error,
+        });
+    }
+  })
+);
+
+// update auction route
+app.put(
+  '/auctions/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await updateAuctionController(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'An unexpected error occurred during auction update',
+          error,
+        });
+    }
+  })
+);
+
+// repost auction route
+app.put(
+  '/repost/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    return repostAuction(req, res); 
+  })
+);
+
+{ /**  bid Routes */}
 app.use('/api/bids', bidRoutes);
+
+app.get('/auction-winner', async (req: Request, res: Response) => {
+  try {
+    await bidController.getAuctionWinners(req, res);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching auctions winner', error });
+  }
+});
+
 
 // Set up Socket.IO event listeners
 io.on('connection', (socket) => {
@@ -156,6 +218,8 @@ io.on('connection', (socket) => {
     console.log('User disconnected', socket.id);
   });
 });
+
+// app.set('io', io);
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

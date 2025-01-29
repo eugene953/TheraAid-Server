@@ -2,9 +2,12 @@ import express, { Request, Response } from 'express';
 
 import {
   createAuctionController,
+  deleteAuctionByIDController,
   getAllAuctionsController,
   getAllProductOfUserController,
   getAuction,
+  repostAuction,
+  updateAuctionController,
 } from '../controllers/auctionController';
 import Auth from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -49,14 +52,15 @@ const router = express.Router();
  */
 router.post(
   '/create',
+  asyncHandler(Auth),
   upload.single('image'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       await createAuctionController(req, res);
     } catch (error) {
       res.status(500).json({ message: 'Error creating auction', error });
     }
-  }
+  })
 );
 
 /**
@@ -201,6 +205,51 @@ router.get(
     } catch (error) {
       res.status(500).json({ message: 'An unexpected error occurred', error });
     }
+  })
+);
+
+// Delete auction route
+router.delete(
+  '/auctions/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteAuctionByIDController(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'An unexpected error occurred during deletion',
+          error,
+        });
+    }
+  })
+);
+
+// update auction route
+router.put(
+  '/auctions/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await updateAuctionController(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'An unexpected error occurred during auction update',
+          error,
+        });
+    }
+  })
+);
+
+// repost auction route
+router.put(
+  '/repost/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    return repostAuction(req, res); 
   })
 );
 

@@ -66,6 +66,16 @@ router.post(
   })
 );
 
+
+router.get('/auction-winner', async (req: Request, res: Response) => {
+  try {
+    await bidController.getAuctionWinners(req, res);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching auctions winner', error });
+  }
+});
+
+
 router.get('/test', (req, res) => {
   res.send('Bid API is working!');
 });
