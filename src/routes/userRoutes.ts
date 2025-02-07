@@ -14,6 +14,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Auth from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  deleteUserController,
+  getAllUsersController,
+} from '../controllers/adminControllers/adminController';
 
 const router = express.Router();
 
@@ -143,7 +147,7 @@ router.post('/login', async (req: Request, res: Response) => {
  */
 
 /** GET methods */
-router.get('/user/:username', async (req: Request, res: Response) => {
+router.get('api/user/:username', async (req: Request, res: Response) => {
   try {
     await getUserController(req, res);
   } catch (error) {
@@ -222,6 +226,31 @@ router.put(
       res.status(500).json({ message: 'Error updating user' });
     }
   })
+);
+
+/** get methods */
+router.get(
+  '/api/getAllUsers',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllUsersController(req, res);
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      res.status(500).json({ message: 'Error getting all users' });
+    }
+  }
+);
+
+router.delete(
+  '/api/deleteUser/:id',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteUserController(req, res);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Error deleting user' });
+    }
+  }
 );
 
 /**router.route('/registerMail').post((req:Request, res:Response) => {

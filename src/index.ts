@@ -23,15 +23,25 @@ import Auth from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
 import {
   deleteAuctionByIDController,
+  getAllAuctionsController,
   getAllProductOfUserController,
   repostAuction,
   updateAuctionController,
 } from './controllers/auctionController';
 
-import * as bidController from './controllers/bidController';
-
 import { upload } from './utils/Cloudinary';
-import { getAuctionWinners } from './controllers/bidController';
+import {
+  getAuctionWinners,
+  getUserAuctionWinners,
+  handleAuctionLifecycle,
+} from './controllers/bidControllers/bidController';
+import { startAuctionLifecycleCron } from './utils/cronScheluler';
+import { createBid } from './services/bidService';
+import {
+  deleteAuctionController,
+  deleteUserController,
+  getAllUsersController,
+} from './controllers/adminControllers/adminController';
 
 dotenv.config();
 
@@ -88,21 +98,35 @@ app.put(
   })
 );
 
+app.get(
+  '/api/getAllUsers',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllUsersController(req, res);
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      res.status(500).json({ message: 'Error getting all users' });
+    }
+  }
+);
+
+app.delete(
+  '/api/deleteUser/:id',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteUserController(req, res);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Error deleting user' });
+    }
+  }
+);
+
 {
   /**  Auction Routes post, get and getting by id , delete  */
 }
 app.use('/api/auctions', auctionRoutes);
 
-{
-  /**
-const uploadDir = path.join(__dirname, 'src', 'middleware', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log('Uploads directory created:', uploadDir);
-}
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
- */
-}
 app.post(
   '/api/auctions/create',
   asyncHandler(Auth),
@@ -148,12 +172,10 @@ app.delete(
     try {
       await deleteAuctionByIDController(req, res);
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: 'An unexpected error occurred during deletion',
-          error,
-        });
+      res.status(500).json({
+        message: 'An unexpected error occurred during deletion',
+        error,
+      });
     }
   })
 );
@@ -166,12 +188,10 @@ app.put(
     try {
       await updateAuctionController(req, res);
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: 'An unexpected error occurred during auction update',
-          error,
-        });
+      res.status(500).json({
+        message: 'An unexpected error occurred during auction update',
+        error,
+      });
     }
   })
 );
@@ -181,37 +201,83 @@ app.put(
   '/repost/:id',
   asyncHandler(Auth),
   asyncHandler(async (req: Request, res: Response) => {
-    return repostAuction(req, res); 
+    return repostAuction(req, res);
   })
 );
 
-{ /**  bid Routes */}
+/** get methods */
+app.get(
+  '/api/getAllAuctions',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllAuctionsController(req, res);
+    } catch (error) {
+      console.error('Error getting all auctions:', error);
+      res.status(500).json({ message: 'Error getting all auctions' });
+    }
+  }
+);
+
+app.delete(
+  '/api/deleteAuction/:id',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteAuctionController(req, res);
+    } catch (error) {
+      console.error('Error deleting auction:', error);
+      res.status(500).json({ message: 'Error deleting auction' });
+    }
+  }
+);
+
+{
+  /**  bid Routes */
+}
 app.use('/api/bids', bidRoutes);
 
+// get all auction-winner
 app.get('/auction-winner', async (req: Request, res: Response) => {
   try {
-    await bidController.getAuctionWinners(req, res);
+    await getAuctionWinners(req, res);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching auctions winner', error });
   }
 });
 
+// get a particular auction-winner
+app.get(
+  '/UserAuctionWinner',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await getUserAuctionWinners(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: 'Error fetching user auctions won', error });
+    }
+  })
+);
 
 // Set up Socket.IO event listeners
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
 
-  // Handle bid event
-  socket.on('sendBid', (data) => {
-    console.log('Bid received:', data);
-    io.emit('bidUpdates', data);
-  });
+  {
+    /**
+    // test works: Emit a test 'auctionWinnerNotification' after the client connects
+    setTimeout(() => {
+      socket.emit('auctionWinnerNotification', {
+        auction_id: 123,
+        username: 'Melinda',
+        message: 'You have won the auction!',
+      });
+    }, 2000);
+ */
+  }
 
-  // Handle notification event
-  socket.on('newNotification', (data) => {
-    console.log('Notification received:', data);
-    io.emit('newNotification', data);
-  });
+  // cron job which run every minute, send winner notification
+  startAuctionLifecycleCron(io);
 
   // Handle disconnections
   socket.on('disconnect', () => {
@@ -219,7 +285,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// app.set('io', io);
+// handle import to io and bidUpdates
+export { io };
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

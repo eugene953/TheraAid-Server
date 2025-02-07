@@ -15,8 +15,8 @@ export const createAuctionController = async (req: Request, res: Response) => {
   try {
     const auctionData: Auction = req.body;
 
-    // Get user_id from the decoded token 
-    const user_id = req.user?.id; 
+    // Get user_id from the decoded token
+    const user_id = req.user?.id;
 
     if (!user_id) {
       return res.status(400).json({ message: 'User ID not found in token' });
@@ -34,7 +34,7 @@ export const createAuctionController = async (req: Request, res: Response) => {
 
     // Retrieve the uploaded file URL from Cloudinary
     if (req.file && req.file.path) {
-      auctionData.image = req.file.path; 
+      auctionData.image = req.file.path;
     } else {
       return res.status(400).json({ message: 'Image upload is required' });
     }
@@ -222,7 +222,6 @@ export const updateAuctionController = async (req: Request, res: Response) => {
   }
 };
 
-
 export const repostAuction = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -233,7 +232,9 @@ export const repostAuction = async (req: Request, res: Response) => {
     }
 
     if (!start_date || !end_date) {
-      return res.status(400).json({ message: 'Start and end dates are required.' });
+      return res
+        .status(400)
+        .json({ message: 'Start and end dates are required.' });
     }
 
     const checkQuery = 'SELECT status FROM auctions WHERE id = $1';
@@ -246,11 +247,14 @@ export const repostAuction = async (req: Request, res: Response) => {
     const currentStatus = checkResult.rows[0].status;
 
     if (currentStatus !== 'ended') {
-      return res.status(400).json({ message: 'Only ended auctions can be reposted' });
+      return res
+        .status(400)
+        .json({ message: 'Only ended auctions can be reposted' });
     }
 
     const now = new Date();
-    let newStatus: 'upcoming' | 'active' = new Date(start_date) > now ? 'upcoming' : 'active';
+    let newStatus: 'upcoming' | 'active' =
+      new Date(start_date) > now ? 'upcoming' : 'active';
 
     const query = `
       UPDATE auctions

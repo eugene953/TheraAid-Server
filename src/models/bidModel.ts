@@ -53,21 +53,30 @@ export const getHighestBid = async (auction_id: number): Promise<number> => {
   }
 };
 
-
+// fetch all winner and their auction won
 export const fetchAuctionWinnersQuery = async (): Promise<any[]> => {
   const query = `
-    SELECT 
-      b.auction_id, 
-      b.user_id, 
-      MAX(b.bid_amount) AS highest_bid,
-      a.title AS auction_title,
-      a.end_date
-    FROM bids b
-    INNER JOIN auctions a ON b.auction_id = a.id
-    WHERE a.end_date <= NOW() AND a.status = 'ended'
-    GROUP BY b.auction_id, b.user_id, a.title, a.end_date
-    ORDER BY a.end_date DESC;
-  `;
+  SELECT 
+    b.auction_id,
+     u.id AS user_id, 
+    u.username, 
+     u.phone_number, 
+     u.email,
+    b.bid_amount AS highest_bid, 
+    a.title AS auction_title,
+    a.end_date
+FROM bids b
+INNER JOIN auctions a ON b.auction_id = a.id
+INNER JOIN users u ON b.user_id = u.id
+WHERE a.end_date <= NOW() 
+  AND a.status = 'ended'
+  AND b.bid_amount = (
+      SELECT MAX(bid_amount) 
+      FROM bids 
+      WHERE auction_id = b.auction_id
+  )
+ORDER BY a.end_date DESC;
+`;
 
   try {
     const { rows } = await pool.query(query);
@@ -78,7 +87,9 @@ export const fetchAuctionWinnersQuery = async (): Promise<any[]> => {
   }
 };
 
-export const updateEndedAuctionsQuery = async (currentDate: Date): Promise<any[]> => {
+export const updateEndedAuctionsQuery = async (
+  currentDate: Date
+): Promise<any[]> => {
   const query = `
     UPDATE auctions
     SET status = 'ended'
@@ -92,5 +103,43 @@ export const updateEndedAuctionsQuery = async (currentDate: Date): Promise<any[]
   } catch (error) {
     console.error('Error updating ended auctions:', error);
     throw new Error('Failed to update auction statuses');
+  }
+};
+
+// fetch a winner and their auction won by user_id
+export const fetchUserAuctionWinnersQuery = async (
+  userId: number
+): Promise<any[]> => {
+  const query = `
+    SELECT 
+           b.auction_id,
+      u.id AS user_id, 
+      u.username, 
+      u.phone_number, 
+      u.email,
+      b.bid_amount AS highest_bid, 
+      a.title AS auction_title,
+      a.image,
+      a.end_date
+    FROM bids b
+    INNER JOIN auctions a ON b.auction_id = a.id
+    INNER JOIN users u ON b.user_id = u.id
+    WHERE a.end_date <= NOW() 
+      AND a.status = 'ended'
+      AND b.bid_amount = (
+        SELECT MAX(bid_amount) 
+        FROM bids 
+        WHERE auction_id = b.auction_id
+      )
+      AND b.user_id = $1  -- Filter by user_id
+    ORDER BY a.end_date DESC;
+
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId]);
+    return rows;
+  } catch (error) {
+    console.error('Error fetching auction winners:', error);
+    throw new Error('Failed to fetch auction winners');
   }
 };

@@ -1,8 +1,10 @@
 import cron from 'node-cron';
-import { handleAuctionLifecycle } from '../controllers/bidController';
+import { handleAuctionLifecycle } from '../controllers/bidControllers/bidController';
+import { Server } from 'socket.io';
 
-// Schedule the cron job to run every minute
-cron.schedule('* * * * *', async () => {
-  console.log('Running auction lifecycle task...');
-  await handleAuctionLifecycle();
-});
+export const startAuctionLifecycleCron = (io: Server) => {
+  cron.schedule('* * * * *', async () => {
+    console.log('Running auction lifecycle task...');
+    await handleAuctionLifecycle(io);
+  });
+};

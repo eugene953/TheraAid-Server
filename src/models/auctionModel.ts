@@ -159,10 +159,9 @@ export const updateAuctionQuery = async (
   auctionId: number,
   auctionData: any
 ): Promise<any> => {
-  const { title, description, start_bid, start_date, end_date } =
-    auctionData;
+  const { title, description, start_bid, start_date, end_date } = auctionData;
 
-      // Determine the initial status based on start and end dates
+  // Determine the initial status based on start and end dates
   let status: 'upcoming' | 'active' | 'ended';
 
   const now = new Date();
@@ -192,7 +191,7 @@ export const updateAuctionQuery = async (
   return rows[0];
 };
 
- // Schedule a task to handle auction lifecycle (ends auctions where the end_date has passed)
+// Schedule a task to handle auction lifecycle (ends auctions where the end_date has passed)
 cron.schedule('* * * * *', async () => {
   try {
     const now = new Date();

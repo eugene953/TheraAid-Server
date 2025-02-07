@@ -12,6 +12,7 @@ import {
 import Auth from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import { upload } from '../utils/Cloudinary';
+import { deleteAuctionController } from '../controllers/adminControllers/adminController';
 
 const router = express.Router();
 
@@ -216,12 +217,10 @@ router.delete(
     try {
       await deleteAuctionByIDController(req, res);
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: 'An unexpected error occurred during deletion',
-          error,
-        });
+      res.status(500).json({
+        message: 'An unexpected error occurred during deletion',
+        error,
+      });
     }
   })
 );
@@ -234,12 +233,10 @@ router.put(
     try {
       await updateAuctionController(req, res);
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: 'An unexpected error occurred during auction update',
-          error,
-        });
+      res.status(500).json({
+        message: 'An unexpected error occurred during auction update',
+        error,
+      });
     }
   })
 );
@@ -249,8 +246,33 @@ router.put(
   '/repost/:id',
   asyncHandler(Auth),
   asyncHandler(async (req: Request, res: Response) => {
-    return repostAuction(req, res); 
+    return repostAuction(req, res);
   })
+);
+
+/** get methods */
+router.get(
+  '/api/getAllAuctions',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllAuctionsController(req, res);
+    } catch (error) {
+      console.error('Error getting all auctions:', error);
+      res.status(500).json({ message: 'Error getting all auctions' });
+    }
+  }
+);
+
+router.delete(
+  '/api/deleteAuction/:id',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteAuctionController(req, res);
+    } catch (error) {
+      console.error('Error deleting auctions:', error);
+      res.status(500).json({ message: 'Error deleting auctions' });
+    }
+  }
 );
 
 export default router;

@@ -1,7 +1,11 @@
 import express, { Router, Request, Response, NextFunction } from 'express';
-import * as bidController from '../controllers/bidController';
 import { asyncHandler } from '../utils/asyncHandler';
 import Auth from '../middleware/authMiddleware';
+import {
+  getAuctionWinners,
+  getUserAuctionWinners,
+  placeBid,
+} from '../controllers/bidControllers/bidController';
 
 const router = Router();
 
@@ -59,22 +63,36 @@ router.post(
   asyncHandler(Auth),
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     try {
-      await bidController.placeBid(req, res);
+      await placeBid(req, res);
     } catch (error) {
       res.status(500).json({ message: 'Error placing bid', error });
     }
   })
 );
 
-
+// get all auction-winner
 router.get('/auction-winner', async (req: Request, res: Response) => {
   try {
-    await bidController.getAuctionWinners(req, res);
+    await getAuctionWinners(req, res);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching auctions winner', error });
   }
 });
 
+// get a particular auction-winner
+router.get(
+  '/UserAuctionWinner',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await getUserAuctionWinners(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: 'Error fetching user auctions won', error });
+    }
+  })
+);
 
 router.get('/test', (req, res) => {
   res.send('Bid API is working!');
