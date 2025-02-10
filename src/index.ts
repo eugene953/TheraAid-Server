@@ -16,10 +16,15 @@ import options from './utils/swaggerConfig';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import {
+  createResetSessionController,
+  generateOTPController,
   getUserController,
+  getUserProfile,
+  resetPasswordController,
   updateUserController,
+  verifyOTPController,
 } from './controllers/userController';
-import Auth from './middleware/authMiddleware';
+import Auth, { localVariables } from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
 import {
   deleteAuctionByIDController,
@@ -42,6 +47,8 @@ import {
   deleteUserController,
   getAllUsersController,
 } from './controllers/adminControllers/adminController';
+import { sendEmail } from './controllers/mailer';
+// import { registerMail } from './controllers/mailer';
 
 dotenv.config();
 
@@ -68,9 +75,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   /** user authentication Routes */
 }
 app.use('/api/users', userRoutes);
-app.post('/api/users/register', (req: Request, res: Response) => {
-  res.send('User API is running!');
-});
+app.post(
+  '/api/users/register',
+  upload.single('profile'),
+  (req: Request, res: Response) => {
+    res.send('User API is running!');
+  }
+);
 
 app.post('/api/users/login', (req: Request, res: Response) => {
   res.send('User API is running!');
@@ -121,6 +132,104 @@ app.delete(
     }
   }
 );
+
+// Route to fetch user by ID
+app.get(
+  '/getUserProfileById/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      console.log('Received ID parameter:', id);
+      await getUserProfile(req, res);
+    } catch (error) {
+      console.error('Error fetching user by ID:', error);
+      res
+        .status(500)
+        .json({
+          message: 'Failed to fetch user profile',
+          error: 'unknown error',
+        });
+    }
+  })
+);
+
+app.post(
+  '/generateOTP',
+  asyncHandler(localVariables),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await generateOTPController(req, res);
+    } catch (error) {
+      console.error('Error generating OTP:', error);
+      res.status(500).json({ message: 'Error generating OTP' });
+    }
+  })
+);
+
+app.post('/verifyOTP', async (req: Request, res: Response): Promise<void> => {
+  try {
+    await verifyOTPController(req, res);
+  } catch (error) {
+    console.error('Error verifying OTP', error);
+    res.status(500).json({ message: 'Error verifying OTP' });
+  }
+});
+
+app.post(
+  '/createResetSession',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await createResetSessionController(req, res);
+    } catch (error) {
+      console.error('Error verifying OTP', error);
+      res.status(500).json({ message: 'Error verifying OTP' });
+    }
+  }
+);
+
+/** PUT methods */
+app.put(
+  '/resetPassword',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await resetPasswordController(req, res);
+    } catch (error) {
+      console.error('Error verifying OTP', error);
+      res.status(500).json({ message: 'Error verifying OTP' });
+    }
+  }
+);
+
+app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
+  const { to, subject, text, html } = req.body;
+
+  if (!to || !subject || !text || !html) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
+  try {
+    const response = await sendEmail(to, subject, text, html);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: 'Error sending email' });
+  }
+});
+
+{
+  /**  
+   app.post( '/registerMail',
+    async (req: Request, res: Response): Promise<void> => {
+       try {
+         await registerMail(req, res);
+       } catch (error) {
+         console.error('Error registering mail', error);
+         res.status(500).json({ message: 'Error registering mail' });
+       }
+     });
+*/
+}
 
 {
   /**  Auction Routes post, get and getting by id , delete  */

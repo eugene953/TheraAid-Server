@@ -6,7 +6,7 @@ export interface UserProps {
   id_card_number: number;
   address: string;
   password: string;
-  confirm_pwd: string;
+  confirm_password: string;
   profile: string | null;
 }
 

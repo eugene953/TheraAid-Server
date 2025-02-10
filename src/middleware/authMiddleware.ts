@@ -37,3 +37,15 @@ const Auth = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export default Auth;
+
+export function localVariables(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  req.app.locals = {
+    OTP: null,
+    resetSession: false,
+  };
+  next();
+}

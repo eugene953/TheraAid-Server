@@ -8,16 +8,18 @@ import {
   createResetSessionController,
   updateUserController,
   resetPasswordController,
+  getUserProfile,
 } from '../controllers/userController';
-import pool from '../config/database';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import Auth from '../middleware/authMiddleware';
+
+import Auth, { localVariables } from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
   deleteUserController,
   getAllUsersController,
 } from '../controllers/adminControllers/adminController';
+import { upload } from '../utils/Cloudinary';
+import { sendEmail } from '../controllers/mailer';
+// import { registerMail } from '../controllers/mailer';
 
 const router = express.Router();
 
@@ -60,13 +62,17 @@ const router = express.Router();
  *       500:
  *         description: Internal Server Error
  */
-router.post('/register', async (req: Request, res: Response) => {
-  try {
-    await registerUserController(req, res);
-  } catch (error) {
-    res.status(500).json({ message: 'Error registering user', error });
+router.post(
+  '/register',
+  upload.single('profile'),
+  async (req: Request, res: Response) => {
+    try {
+      await registerUserController(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error registering user', error });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -253,20 +259,111 @@ router.delete(
   }
 );
 
+// Route to fetch user by ID
+router.get(
+  '/getUserProfileById/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      console.log('Received ID parameter:', id);
+      await getUserProfile(req, res);
+    } catch (error) {
+      console.error('Error fetching user by ID:', error);
+      res
+        .status(500)
+        .json({
+          message: 'Failed to fetch user profile',
+          error: 'unknown error',
+        });
+    }
+  })
+);
+
 /**router.route('/registerMail').post((req:Request, res:Response) => {
     res.json('register route')
 }); */
 
-router.route('/authenticate').post((req: Request, res: Response) => {
-  res.json('register route');
-});
+router.post(
+  '/generateOTP',
+  asyncHandler(localVariables),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await generateOTPController(req, res);
+    } catch (error) {
+      console.error('Error generating OTP:', error);
+      res.status(500).json({ message: 'Error generating OTP' });
+    }
+  })
+);
 
-/** GET methods */
-router.route('/generateOTP').get(generateOTPController);
-router.route('/verifyOTP').get(verifyOTPController);
-router.route('/createResetSession').get(createResetSessionController);
+router.post(
+  '/verifyOTP',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await verifyOTPController(req, res);
+    } catch (error) {
+      console.error('Error verifying OTP', error);
+      res.status(500).json({ error: 'Error verifying OTP' });
+    }
+  }
+);
+
+router.post(
+  '/createResetSession',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await createResetSessionController(req, res);
+    } catch (error) {
+      console.error('Error creating reset session', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
 /** PUT methods */
-router.route('/resetPassword').put(resetPasswordController);
+router.put(
+  '/resetPassword',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await resetPasswordController(req, res);
+    } catch (error) {
+      console.error('Error verifying OTP', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
+router.post(
+  '/send-email',
+  async (req: Request, res: Response): Promise<void> => {
+    const { to, subject, text, html } = req.body;
+
+    if (!to || !subject || !text || !html) {
+      res.status(400).json({ message: 'All fields are required' });
+      return;
+    }
+
+    try {
+      const response = await sendEmail(to, subject, text, html);
+      res.status(200).json(response);
+    } catch (error) {
+      res.status(500).json({ message: 'Error sending email' });
+    }
+  }
+);
+
+{
+  /**
+   router.post( '/registerMail',
+    async (req: Request, res: Response): Promise<void> => {
+       try {
+         await registerMail(req, res);
+       } catch (error) {
+         console.error('Error registering mail', error);
+         res.status(500).json({ message: 'Error registering mail' });
+       }
+     });
+ */
+}
 export default router;
