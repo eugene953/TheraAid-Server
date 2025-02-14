@@ -2,11 +2,11 @@ import { Request, Response } from 'express';
 import { getUserProfileById, registerUser } from '../services/userService';
 import pool from '../config/database';
 import bcrypt from 'bcrypt';
-import { authenticateUser, generateToken } from '../utils/jwtUtils';
 import { userQuery } from '../models/userModel';
 import { UserProps } from '../types/userTypes';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from './mailer';
+import { generateToken } from '../middleware/generatetoken';
 
 const nodemailer = require('nodemailer');
 
@@ -16,7 +16,8 @@ export const registerUserController = async (req: Request, res: Response) => {
 
     const newUser = await registerUser(req.body, req.file);
 
-    const token = generateToken(Number(newUser.id)); // generate token
+    // Pass the object with `id` and `role` to the token generation
+    const token = generateToken({ id: Number(newUser.id), role: 'user' });
 
     // Send a welcome email to the registered user's email
     const subject = 'Welcome to Kako!';
@@ -34,6 +35,7 @@ export const registerUserController = async (req: Request, res: Response) => {
       username: newUser.username,
       email: newUser.email,
       profile: newUser.profile,
+      role: newUser.role,
 
       token,
     });
@@ -46,39 +48,68 @@ export const loginController = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   try {
-    // check  if username exist in database
-    const query = `SELECT * FROM users WHERE username = $1`;
-    const { rows } = await pool.query(query, [username]);
+    // Check if the user exists in the users table
+    const queryUser = `SELECT * FROM users WHERE username = $1`;
+    const { rows: userRows } = await pool.query(queryUser, [username]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+    if (userRows.length > 0) {
+      const user = userRows[0];
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (isPasswordValid) {
+        // Pass the object with `id` and `role` to the token generation
+        const token = generateToken({ id: Number(user.id), role: 'user' });
+
+        return res.status(200).json({
+          message: 'Login successful',
+          role: 'user',
+          user: {
+            user_id: user.id,
+            username: user.username,
+            email: user.email,
+          },
+          token,
+        });
+      } else {
+        return res
+          .status(401)
+          .json({ message: 'Invalid username or password' });
+      }
     }
-    console.log('Comparing passwords...');
 
-    const user = rows[0];
-    // Comparing provided password with the hashed password in the database
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Check if the admin exists in the admins table
+    const queryAdmin = `SELECT * FROM admins WHERE admin_name = $1 OR email = $1`;
+    const { rows: adminRows } = await pool.query(queryAdmin, [username]);
 
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+    if (adminRows.length > 0) {
+      const admin = adminRows[0];
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+
+      if (isPasswordValid) {
+        // Pass the object with `id` and `role` to the token generation
+        const token = generateToken({ id: Number(admin.id), role: 'admin' });
+
+        return res.status(200).json({
+          message: 'Login successful',
+          role: 'admin',
+          user: {
+            user_id: admin.id,
+            username: admin.admin_name,
+            email: admin.email,
+          },
+          token,
+        });
+      } else {
+        return res
+          .status(401)
+          .json({ message: 'Invalid username or password' });
+      }
     }
 
-    // Authenticate and generate JWT
-    const token = generateToken(Number(user.id));
-    console.log('authenticate and generate JWT:', token);
-
-    // Returning login success with token
-    return res.status(200).json({
-      message: 'Login successful',
-      user: {
-        user_id: user.id,
-        username: user.username,
-        email: user.email,
-      },
-      token,
-    });
+    return res.status(404).json({ message: 'User not found' });
   } catch (error) {
-    res.status(500).json({ message: 'Error login user', error });
+    console.error('Login Error:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
@@ -176,12 +207,10 @@ export const getUserProfile = async (
     return res.json({ userProfile });
   } catch (error) {
     console.error('Error fetching user profile image:', error);
-    return res
-      .status(500)
-      .json({
-        message: 'Failed to fetch user profile image',
-        error: 'Unknown error',
-      });
+    return res.status(500).json({
+      message: 'Failed to fetch user profile image',
+      error: 'Unknown error',
+    });
   }
 };
 

@@ -96,43 +96,39 @@ export const getAllProductOfUserController = async (
   req: Request,
   res: Response
 ) => {
-  // Extracting user_id from authenticated request object
-  const user_id = req.user?.id;
-
-  if (!user_id) {
-    return res
-      .status(401)
-      .json({ message: 'Unauthorized: user ID is missing' });
-  }
-  console.log('Received user ID:', user_id);
-
-  // Converting user_id to a number
-  const numericUserId = parseInt(user_id, 10);
-
-  if (isNaN(numericUserId)) {
-    return res
-      .status(400)
-      .json({ message: 'Invalid user ID. ID must be a number.' });
-  }
-
   try {
-    const userAuctions = await fetchAuctionsByUserIdQuery(numericUserId);
-    if (!userAuctions || userAuctions.length === 0)
-      return res.status(200).json({ auctions: [] });
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: 'Unauthorized: user not authenticated' });
+    }
 
+    const userId = Number(req.user.id);
+    if (isNaN(userId)) {
+      return res
+        .status(400)
+        .json({ message: 'Invalid user ID. ID must be a number.' });
+    }
+
+    // Fetch auctions
+    const userAuctions = await fetchAuctionsByUserIdQuery(userId);
+
+    // Ensure only JSON-serializable data is returned
     const formattedAuctions = userAuctions.map((auction) => ({
       id: auction.id,
       title: auction.auction_title,
       price: auction.start_bid,
       image: auction.image,
       end_date: auction.end_date,
-      sold: false,
+      sold: auction.sold ?? false,
     }));
 
     return res.status(200).json({ auctions: formattedAuctions });
-  } catch (error) {
-    console.error('Error fetching user auctions:', error);
-    res.status(500).json({ error: 'Unable to fetch user auctions' });
+  } catch (error: any) {
+    console.error('Error fetching user auctions:', error.message || error);
+
+    // Ensure only JSON-serializable error messages are sent
+    return res.status(500).json({ error: 'Unable to fetch user auctions' });
   }
 };
 

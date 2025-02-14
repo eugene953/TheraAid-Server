@@ -1,38 +1,63 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserProps } from '../types/userTypes';
+import { AdminProps } from '../types/adminTypes';
 
 // Extend Express Request type to include user
 declare module 'express-serve-static-core' {
   interface Request {
-    user?: UserProps;
+    user?: UserProps | AdminProps;
   }
 }
 
 const Auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // access authorize header to validate request
+    // Access authorization header
     const token = req.headers.authorization?.split(' ')[1];
     console.log('Authorization Header:', req.headers.authorization);
 
     if (!token) {
-      return res.status(401).json({ error: 'Authenticate Failed' });
+      return res
+        .status(401)
+        .json({ error: 'Authentication Failed: No Token Provided' });
     }
+
     console.log('Extracted Token:', token);
 
-    // retrive user details of logged in user
-    const decoded = jwt.verify(
-      token,
-      'zDJzXV5W5mR0Ysz2uJNhfoWvEutpZwVnPt2bG1ipnEU='
-    ) as UserProps;
+    const secretKey =
+      process.env.JWT_SECRET || 'zDJzXV5W5mR0Ysz2uJNhfoWvEutpZwVnPt2bG1ipnEU=';
 
-    // Ensure only the id is set in req.user
-    req.user = { id: decoded.id } as UserProps;
+    // Decode the token
+    const decoded = jwt.verify(token, secretKey) as {
+      id?: string;
+      role?: 'user' | 'admin';
+    };
+
+    console.log('Decoded Token:', decoded);
+
+    if (!decoded.id) {
+      console.error('JWT Error: User ID not found in token');
+      return res.status(401).json({ message: 'User ID not found in token' });
+    }
+
+    if (!decoded.role) {
+      console.error('JWT Error: User role not found in token');
+      return res.status(401).json({ message: 'User role not found in token' });
+    }
+
+    // Assign user based on role
+    if (decoded.role === 'user') {
+      req.user = { id: decoded.id, role: 'user' } as UserProps;
+    } else if (decoded.role === 'admin') {
+      req.user = { id: decoded.id, role: 'admin' } as AdminProps;
+    }
+
+    console.log(`User Authenticated: ID=${decoded.id}, Role=${decoded.role}`);
 
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(401).json({ error: 'Authentication Failed!' });
+    return res.status(401).json({ error: 'Authentication Failed!' });
   }
 };
 

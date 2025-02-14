@@ -35,8 +35,8 @@ export const userQuery = async (
     const hashedConfirmPwd = await bcrypt.hash(confirm_password, saltRounds);
 
     const query = `
-  INSERT INTO users (username, email, phone_number, id_card_number, address, password, confirm_password, profile)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8 )
+  INSERT INTO users (username, email, phone_number, id_card_number, address, password, confirm_password, profile, role)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9 )
   RETURNING *;
 `;
 
@@ -49,6 +49,7 @@ export const userQuery = async (
       hashedPassword,
       hashedConfirmPwd,
       profilePath,
+      'user',
     ];
     const { rows } = await pool.query(query, values);
     return rows[0];

@@ -13,6 +13,7 @@ import Auth from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import { upload } from '../utils/Cloudinary';
 import { deleteAuctionController } from '../controllers/adminControllers/adminController';
+import authorizeRole from '../middleware/authoriseMiddleware';
 
 const router = express.Router();
 

@@ -8,6 +8,7 @@ export interface UserProps {
   password: string;
   confirm_password: string;
   profile: string | null;
+  role: 'user';
 }
 
 export interface UserLoginProps {

@@ -63,7 +63,7 @@ const router = express.Router();
  *         description: Internal Server Error
  */
 router.post(
-  '/register',
+  '/api/users/register',
   upload.single('profile'),
   async (req: Request, res: Response) => {
     try {
@@ -270,12 +270,10 @@ router.get(
       await getUserProfile(req, res);
     } catch (error) {
       console.error('Error fetching user by ID:', error);
-      res
-        .status(500)
-        .json({
-          message: 'Failed to fetch user profile',
-          error: 'unknown error',
-        });
+      res.status(500).json({
+        message: 'Failed to fetch user profile',
+        error: 'unknown error',
+      });
     }
   })
 );

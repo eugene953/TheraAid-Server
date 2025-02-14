@@ -1,5 +1,22 @@
 import { Request, Response } from 'express';
 import pool from '../../config/database';
+import { adminQuery } from '../../models/adminModel';
+
+export const registerAdminController = async (req: Request, res: Response) => {
+  try {
+    const newAdmin = await adminQuery(req.body);
+
+    res.status(201).json({
+      success: true,
+      admin_id: newAdmin.id,
+      username: newAdmin.admin_name,
+      email: newAdmin.email,
+      role: newAdmin.role,
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 
 {
   /** Handling users*/

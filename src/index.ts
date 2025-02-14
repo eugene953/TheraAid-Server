@@ -20,6 +20,7 @@ import {
   generateOTPController,
   getUserController,
   getUserProfile,
+  registerUserController,
   resetPasswordController,
   updateUserController,
   verifyOTPController,
@@ -46,8 +47,10 @@ import {
   deleteAuctionController,
   deleteUserController,
   getAllUsersController,
+  registerAdminController,
 } from './controllers/adminControllers/adminController';
 import { sendEmail } from './controllers/mailer';
+import authorizeRole from './middleware/authoriseMiddleware';
 // import { registerMail } from './controllers/mailer';
 
 dotenv.config();
@@ -75,11 +78,16 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   /** user authentication Routes */
 }
 app.use('/api/users', userRoutes);
+
 app.post(
   '/api/users/register',
   upload.single('profile'),
-  (req: Request, res: Response) => {
-    res.send('User API is running!');
+  async (req: Request, res: Response) => {
+    try {
+      await registerUserController(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error registering user', error });
+    }
   }
 );
 
@@ -144,12 +152,10 @@ app.get(
       await getUserProfile(req, res);
     } catch (error) {
       console.error('Error fetching user by ID:', error);
-      res
-        .status(500)
-        .json({
-          message: 'Failed to fetch user profile',
-          error: 'unknown error',
-        });
+      res.status(500).json({
+        message: 'Failed to fetch user profile',
+        error: 'unknown error',
+      });
     }
   })
 );
@@ -366,6 +372,19 @@ app.get(
         .json({ message: 'Error fetching user auctions won', error });
     }
   })
+);
+
+// admin
+app.post(
+  '/adminRegister',
+
+  async (req: Request, res: Response) => {
+    try {
+      await registerAdminController(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error registering admin', error });
+    }
+  }
 );
 
 // Set up Socket.IO event listeners
