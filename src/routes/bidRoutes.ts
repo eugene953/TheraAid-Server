@@ -2,6 +2,7 @@ import express, { Router, Request, Response, NextFunction } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import Auth from '../middleware/authMiddleware';
 import {
+  generateReportWinnerControllers,
   getAuctionWinners,
   getUserAuctionWinners,
   placeBid,
@@ -90,6 +91,24 @@ router.get(
       res
         .status(500)
         .json({ message: 'Error fetching user auctions won', error });
+    }
+  })
+);
+
+// generate report
+router.get(
+  '/api/AuctionWinner-report',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await generateReportWinnerControllers(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'Error generating report for auctions winners',
+          error,
+        });
     }
   })
 );

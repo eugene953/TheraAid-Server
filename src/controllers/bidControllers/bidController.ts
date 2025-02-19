@@ -3,6 +3,7 @@ import {
   createBidQuery,
   fetchAuctionWinnersQuery,
   fetchUserAuctionWinnersQuery,
+  generateReportWinnersQuery,
   getHighestBid,
   updateEndedAuctionsQuery,
 } from '../../models/bidModel';
@@ -13,6 +14,7 @@ import { fetchAuctionById } from '../../models/auctionModel';
 import { io } from '../../index';
 import pool from '../../config/database';
 import { title } from 'process';
+import { generatePdfReport } from '../../utils/generateReportPdt';
 
 export const placeBid = async (req: Request, res: Response) => {
   try {
@@ -103,7 +105,6 @@ export const getAuctionWinners = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch auction winners' });
   }
 };
-
 export const handleAuctionLifecycle = async (io: any) => {
   try {
     const now = new Date();
@@ -139,7 +140,7 @@ export const handleAuctionLifecycle = async (io: any) => {
   }
 };
 
-// Get auction winners for the authenticated user
+// Get auction won for the authenticated user
 export const getUserAuctionWinners = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
@@ -158,7 +159,6 @@ export const getUserAuctionWinners = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch auction winners' });
   }
 };
-
 // Notify the authenticated user of their auction win
 export const handleUserAuctionLifecycle = async (io: any, user_id: number) => {
   try {
@@ -173,26 +173,77 @@ export const handleUserAuctionLifecycle = async (io: any, user_id: number) => {
       const winners = await fetchUserAuctionWinnersQuery(user_id); // Get all winners or pass user_id if filtering for specific user
 
       console.log('Auction winners:', winners);
-
-      // Notify the winners via Socket.IO
-      if (winners.length > 0) {
-        winners.forEach(async (winner) => {
-          const message = `🎉 Congratulations ${winner.username}! You won the auction for "${winner.auction_title}" with a bid of ${winner.highest_bid} XAF.`;
-          console.log(`Sending notification to ${winner.username}: ${message}`);
-
-          // Emit to the specific winner
-          io.to(winner.user_id.toString()).emit('auctionWinnerNotification', {
-            auction_id: winner.auction_id,
-            username: winner.username,
-            message,
-          });
-        });
-
-        // Emit the winners' data (optional, in case you want to send this to the frontend)
-        io.emit('auctionWinners', winners);
-      }
     }
   } catch (error) {
     console.error('Error handling auction lifecycle:', error);
+  }
+};
+
+export const generateReportWinnerControllers = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    if (!req.user || req.user.role !== 'admin' || !req.user.id) {
+      console.error('Unauthorized access attempt:', req.user);
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized: Admin access required' });
+    }
+
+    const adminId = parseInt(req.user.id, 10);
+
+    if (isNaN(adminId)) {
+      return res.status(400).json({ message: 'Invalid Admin ID format' });
+    }
+    // Fetch Admin Name from the Database
+    const adminQuery = 'SELECT admin_name FROM admins WHERE id = $1';
+    const { rows } = await pool.query(adminQuery, [adminId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    const adminName = rows[0].admin_name;
+
+    // Extract query parameters and ensure they are strings
+    const period = (req.query.period as string) ?? 'monthly';
+    const dateString = req.query.date as string;
+
+    // Ensure the period is valid ('weekly' or 'monthly')
+    if (!['weekly', 'monthly'].includes(period)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid period. Must be 'weekly' or 'monthly'." });
+    }
+
+    const validPeriod = period as 'weekly' | 'monthly';
+
+    const reportDate = dateString ? new Date(dateString) : new Date();
+    if (isNaN(reportDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
+    const winners = await generateReportWinnersQuery(validPeriod, dateString);
+
+    // If no winners, respond with an empty list
+    if (winners.length === 0) {
+      return res
+        .status(200)
+        .json({ message: 'No winners found for the selected period.' });
+    }
+
+    // Generate PDF report
+    const pdfBuffer = generatePdfReport(winners, reportDate, period, adminName);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=KAKO_AuctionWinners_report.pdf'
+    );
+    res.send(Buffer.from(pdfBuffer));
+  } catch (error) {
+    console.error('Error generating auction report:', error);
+    res.status(500).json({ message: 'Failed to generate auction report' });
   }
 };

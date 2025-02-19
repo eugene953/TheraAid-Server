@@ -143,3 +143,61 @@ export const fetchUserAuctionWinnersQuery = async (
     throw new Error('Failed to fetch auction winners');
   }
 };
+
+// Fetch all winners and their auctions won, including seller information to generate report
+export const generateReportWinnersQuery = async (
+  period: 'weekly' | 'monthly',
+  date: string
+): Promise<any[]> => {
+  const periodQuery =
+    period === 'monthly'
+      ? `AND EXTRACT(MONTH FROM a.end_date) = EXTRACT(MONTH FROM TO_TIMESTAMP($1, 'YYYY-MM-DD'))`
+      : `AND EXTRACT(WEEK FROM a.end_date) = EXTRACT(WEEK FROM TO_TIMESTAMP($1, 'YYYY-MM-DD'))`;
+
+  const query = `
+    SELECT 
+      b.auction_id,
+       u.id AS user_id, --Bidder's user_id
+      u.username, 
+       u.phone_number, 
+       u.email,
+      b.bid_amount, 
+      a.title ,
+      a.end_date,
+      a.user_id AS creator_user_id,
+      cu.username AS creator_username,
+      cu.phone_number AS creator_phone_number
+  FROM bids b
+  INNER JOIN auctions a ON b.auction_id = a.id
+  INNER JOIN users u ON b.user_id = u.id -- Bidder's user details
+  INNER JOIN users cu ON a.user_id = cu.id  -- Creator's user details
+  WHERE a.end_date <= NOW() 
+    AND a.status = 'ended'
+    AND b.bid_amount = (
+        SELECT MAX(bid_amount) 
+        FROM bids 
+        WHERE auction_id = b.auction_id
+    )
+         ${periodQuery}
+  ORDER BY a.end_date DESC;
+  `;
+
+  try {
+    const { rows } = await pool.query(query, [date]);
+    return rows.map((row) => ({
+      auctionId: row.auction_id || 'N/A',
+      userName: row.username || 'N/A',
+      auctionTitle: row.title || 'N/A',
+      highestBid: String(row.bid_amount || '0'),
+      endDate: row.end_date
+        ? new Date(row.end_date).toISOString().split('T')[0]
+        : 'N/A',
+      phoneNumber: row.phone_number || 'N/A',
+      sellerUserName: row.creator_username || 'N/A', // seller username
+      sellerPhoneNumber: row.creator_phone_number || 'N/A', // seller phone number
+    }));
+  } catch (error) {
+    console.error('Error fetching auction winners:', error);
+    throw new Error('Failed to fetch auction winners');
+  }
+};

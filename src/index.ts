@@ -37,6 +37,7 @@ import {
 
 import { upload } from './utils/Cloudinary';
 import {
+  generateReportWinnerControllers,
   getAuctionWinners,
   getUserAuctionWinners,
   handleAuctionLifecycle,
@@ -370,6 +371,24 @@ app.get(
       res
         .status(500)
         .json({ message: 'Error fetching user auctions won', error });
+    }
+  })
+);
+
+// generate report
+app.get(
+  '/api/AuctionWinner-report',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await generateReportWinnerControllers(req, res);
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: 'Error generating report for auctions winners',
+          error,
+        });
     }
   })
 );
