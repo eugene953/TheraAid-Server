@@ -7,17 +7,13 @@ export const registerUser = async (
   userData: UserProps,
   file?: Express.Multer.File
 ): Promise<UserProps> => {
-  const { email, password, confirm_password } = userData;
+  const { email, password } = userData;
 
   // Check for unique email
   const emailQuery = 'SELECT * FROM users WHERE email = $1';
   const { rowCount: emailExists } = await pool.query(emailQuery, [email]);
   if (emailExists) {
     throw new Error('Email is already registered');
-  }
-
-  if (userData.password !== userData.confirm_password) {
-    throw new Error('Password do not match');
   }
 
   return await userQuery(userData, file);

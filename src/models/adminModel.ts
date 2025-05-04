@@ -5,16 +5,15 @@ import bcrypt from 'bcrypt';
 export const adminQuery = async (
   adminData: AdminProps
 ): Promise<AdminProps> => {
-  const { admin_name, email, password, confirm_password } = adminData;
+  const { admin_name, email, password } = adminData;
 
   try {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const hashedConfirmPwd = await bcrypt.hash(confirm_password, saltRounds);
 
     const query = `
-   INSERT INTO admins (admin_name, email, password, confirm_password, role)
-      VALUES ($1, $2, $3, $4, $5)
+   INSERT INTO admins (admin_name, email, password, role)
+      VALUES ($1, $2, $3, $4)
       RETURNING *;
     `;
 
@@ -22,7 +21,6 @@ export const adminQuery = async (
       admin_name,
       email,
       hashedPassword,
-      hashedConfirmPwd,
       'admin',
     ];
 

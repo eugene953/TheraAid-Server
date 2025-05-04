@@ -12,45 +12,42 @@ export const userQuery = async (
   const {
     username,
     email,
-    phone_number,
-    id_card_number,
-    address,
     password,
-    confirm_password,
+    phone_number,
+    gender,
   } = userData;
 
   let profilePath: string | null = null;
 
-  try {
-    if (!file) {
-      throw new Error('Profile image upload is required');
-    }
-
-    // Cloudinary automatically uploads via Multer's storage configuration
+    if (file) {
+      // Cloudinary automatically uploads via Multer's storage configuration
     profilePath = file.path;
-
+    }
+   
+try{
     // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const hashedConfirmPwd = await bcrypt.hash(confirm_password, saltRounds);
 
-    const query = `
-  INSERT INTO users (username, email, phone_number, id_card_number, address, password, confirm_password, profile, role)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9 )
-  RETURNING *;
-`;
+    let query: string;
+    let values: any[];
 
-    const values = [
-      username,
-      email,
-      phone_number,
-      id_card_number,
-      address,
-      hashedPassword,
-      hashedConfirmPwd,
-      profilePath,
-      'user',
-    ];
+    if (profilePath) {
+      query = `
+        INSERT INTO users (username, email, password, phone_number, gender, profile, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *;
+      `;
+      values = [username, email, hashedPassword, phone_number, gender, profilePath, 'user'];
+    } else {
+      query = `
+        INSERT INTO users (username, email, password, phone_number, gender, role)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *;
+      `;
+      values = [username, email, hashedPassword, phone_number, gender, 'user'];
+    }
+
     const { rows } = await pool.query(query, values);
     return rows[0];
   } catch (error) {

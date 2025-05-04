@@ -3,10 +3,8 @@ export interface UserProps {
   username: string;
   email: string;
   phone_number: string;
-  id_card_number: number;
-  address: string;
+  gender: string;
   password: string;
-  confirm_password: string;
   profile: string | null;
   role: 'user';
 }

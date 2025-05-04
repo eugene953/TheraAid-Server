@@ -7,10 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { Server } from 'socket.io';
 
-import auctionRoutes from './routes/auctionRoutes';
 import userRoutes from './routes/userRoutes';
-import bidRoutes from './routes/bidRoutes';
-import { getAllAuctions } from './services/auctionService';
 import options from './utils/swaggerConfig';
 
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -27,23 +24,9 @@ import {
 } from './controllers/userController';
 import Auth, { localVariables } from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
-import {
-  deleteAuctionByIDController,
-  getAllAuctionsController,
-  getAllProductOfUserController,
-  repostAuction,
-  updateAuctionController,
-} from './controllers/auctionController';
-
 import { upload } from './utils/Cloudinary';
-import {
-  generateReportWinnerControllers,
-  getAuctionWinners,
-  getUserAuctionWinners,
-  handleAuctionLifecycle,
-} from './controllers/bidControllers/bidController';
-import { startAuctionLifecycleCron } from './utils/cronScheluler';
-import { createBid } from './services/bidService';
+
+
 import {
   deleteAuctionController,
   deleteUserController,
@@ -74,6 +57,7 @@ app.use(morgan('tiny'));
 // Swagger setup
 const swaggerDocs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 
 {
   /** user authentication Routes */
@@ -224,178 +208,12 @@ app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-{
-  /**  
-   app.post( '/registerMail',
-    async (req: Request, res: Response): Promise<void> => {
-       try {
-         await registerMail(req, res);
-       } catch (error) {
-         console.error('Error registering mail', error);
-         res.status(500).json({ message: 'Error registering mail' });
-       }
-     });
-*/
-}
 
 {
-  /**  Auction Routes post, get and getting by id , delete  */
+  /**  admin Routes */
 }
-app.use('/api/auctions', auctionRoutes);
-
 app.post(
-  '/api/auctions/create',
-  asyncHandler(Auth),
-  upload.single('image'),
-  asyncHandler(async (req: Request, res: Response) => {
-    res.send('Auction API is running!');
-  })
-);
-
-app.get('/api/auctions/fetch', async (req, res) => {
-  try {
-    const auctions = await getAllAuctions();
-    res.status(200).json({ auctions }); // Send auctions data
-  } catch (error) {
-    console.error('Error fetching auctions:', error);
-    res.status(500).json({ message: 'Error fetching auctions' });
-  }
-});
-
-app.get('/api/auctions/fetch/:id', (req: Request, res: Response) => {
-  res.send('Auction API is running!');
-});
-
-app.get(
-  '/api/user',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const data = await getAllProductOfUserController(req, res);
-      res.status(200).json({ data });
-    } catch (error) {
-      console.error('Error fetching auctions:', error);
-      res.status(500).json({ message: 'Error fetching auctions' });
-    }
-  })
-);
-
-// Delete auction route
-app.delete(
-  '/auctions/:id',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    try {
-      await deleteAuctionByIDController(req, res);
-    } catch (error) {
-      res.status(500).json({
-        message: 'An unexpected error occurred during deletion',
-        error,
-      });
-    }
-  })
-);
-
-// update auction route
-app.put(
-  '/auctions/:id',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    try {
-      await updateAuctionController(req, res);
-    } catch (error) {
-      res.status(500).json({
-        message: 'An unexpected error occurred during auction update',
-        error,
-      });
-    }
-  })
-);
-
-// repost auction route
-app.put(
-  '/repost/:id',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response) => {
-    return repostAuction(req, res);
-  })
-);
-
-/** get methods */
-app.get(
-  '/api/getAllAuctions',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await getAllAuctionsController(req, res);
-    } catch (error) {
-      console.error('Error getting all auctions:', error);
-      res.status(500).json({ message: 'Error getting all auctions' });
-    }
-  }
-);
-
-app.delete(
-  '/api/deleteAuction/:id',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await deleteAuctionController(req, res);
-    } catch (error) {
-      console.error('Error deleting auction:', error);
-      res.status(500).json({ message: 'Error deleting auction' });
-    }
-  }
-);
-
-{
-  /**  bid Routes */
-}
-app.use('/api/bids', bidRoutes);
-
-// get all auction-winner
-app.get('/auction-winner', async (req: Request, res: Response) => {
-  try {
-    await getAuctionWinners(req, res);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching auctions winner', error });
-  }
-});
-
-// get a particular auction-winner
-app.get(
-  '/UserAuctionWinner',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response) => {
-    try {
-      await getUserAuctionWinners(req, res);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: 'Error fetching user auctions won', error });
-    }
-  })
-);
-
-// generate report
-app.get(
-  '/api/AuctionWinner-report',
-  asyncHandler(Auth),
-  asyncHandler(async (req: Request, res: Response) => {
-    try {
-      await generateReportWinnerControllers(req, res);
-    } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: 'Error generating report for auctions winners',
-          error,
-        });
-    }
-  })
-);
-
-// admin
-app.post(
-  '/adminRegister',
+  '/api/adminRegister',
 
   async (req: Request, res: Response) => {
     try {
@@ -410,21 +228,7 @@ app.post(
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
 
-  {
-    /**
-    // test works: Emit a test 'auctionWinnerNotification' after the client connects
-    setTimeout(() => {
-      socket.emit('auctionWinnerNotification', {
-        auction_id: 123,
-        username: 'Melinda',
-        message: 'You have won the auction!',
-      });
-    }, 2000);
- */
-  }
 
-  // cron job which run every minute, send winner notification
-  startAuctionLifecycleCron(io);
 
   // Handle disconnections
   socket.on('disconnect', () => {

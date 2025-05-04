@@ -8,7 +8,7 @@ const pool = new Pool({
   port: 5432,
   user: 'postgres',
   password: 'eugene953',
-  database: 'kako',
+  database: 'MentalHealhSupportBot',
 });
 
 // Test the connection

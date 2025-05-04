@@ -20,12 +20,18 @@ export const registerUserController = async (req: Request, res: Response) => {
     const token = generateToken({ id: Number(newUser.id), role: 'user' });
 
     // Send a welcome email to the registered user's email
-    const subject = 'Welcome to Kako!';
-    const text = `Hello ${newUser.username}, welcome to Kako! We're glad to have you.`;
-    const html = `<h1>Welcome, ${newUser.username}!</h1><p>Thank you for registering at Kako. You're now ready to start bidding and explore exciting auctions.</p>
-                   <p>If you have any questions, feel free to reach out to us at <a href="nfouaeugene@gmail.com">nfouaeugene@gmail.com</a>.</p>
-        `;
-
+    const subject = 'Welcome to TheraAid!';
+    const text = `Hello ${newUser.username}, welcome to TheraAid! We're glad to have you as part of our mental wellness community.`;
+    
+    const html = `
+      <h1>Welcome, ${newUser.username}!</h1>
+      <p>Thank you for registering at <strong>TheraAid</strong>. You're now part of a safe space dedicated to supporting mental health through multilingual chat assistance.</p>
+      <p>Our chatbot is here 24/7 to listen, support, and guide you in your preferred language.</p>
+      <p>If you have any questions or feedback, feel free to contact us at 
+         <a href="mailto:nfouaeugene@gmail.com">nfouaeugene@gmail.com</a>.</p>
+      <p><strong>You're not alone — we're here for you.</strong></p>
+    `;
+    
     // Call the sendEmail function to send the email
     await sendEmail(newUser.email, subject, text, html);
 
@@ -43,6 +49,7 @@ export const registerUserController = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 export const loginController = async (req: Request, res: Response) => {
   const { username, password } = req.body;
