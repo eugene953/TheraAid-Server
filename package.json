@@ -6,6 +6,7 @@
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@supabase/supabase-js": "^2.49.4",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cloudinary": "^1.21.0",
@@ -48,7 +49,8 @@
     "prepare": "husky install",
     "lint": "eslint ./src",
     "lint:debug": "eslint ./src --debug",
-    "lint:fix": "eslint ./src --fix"
+    "lint:fix": "eslint ./src --fix",
+     "ngrok": "ngrok http 3002"
   },
   "config": {
     "commitizen": {
@@ -101,6 +103,7 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
+    "ngrok": "^5.0.0-beta.2",
     "postcss": "^8.4.38",
     "prettier": "^2.8.7",
     "prop-types": "^15.8.1",

@@ -22,6 +22,7 @@ import {
   updateUserController,
   verifyOTPController,
 } from './controllers/userController';
+
 import Auth, { localVariables } from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
 import { upload } from './utils/Cloudinary';
@@ -35,6 +36,7 @@ import {
 } from './controllers/adminControllers/adminController';
 import { sendEmail } from './controllers/mailer';
 import authorizeRole from './middleware/authoriseMiddleware';
+import { handleChat } from './controllers/chatController';
 // import { registerMail } from './controllers/mailer';
 
 dotenv.config();
@@ -48,9 +50,9 @@ const io = new Server(server, {
   },
 });
 
-const PORT = process.env.PORT || 3002;
+const PORT = Number(process.env.PORT) || 3002;
 
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3002' }));
 app.use(express.json());
 app.use(morgan('tiny'));
 
@@ -224,6 +226,23 @@ app.post(
   }
 );
 
+
+{
+  /**  chat Routes */
+}
+
+app.post('/api/chat',
+  asyncHandler(Auth),
+  asyncHandler( async (req: Request, res: Response) => {
+    try {
+      await handleChat(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error in chat', error });
+    }
+  })
+);
+ 
+
 // Set up Socket.IO event listeners
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
@@ -239,6 +258,6 @@ io.on('connection', (socket) => {
 // handle import to io and bidUpdates
 export { io };
 
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+server.listen(PORT,'0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });

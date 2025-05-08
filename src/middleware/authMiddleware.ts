@@ -31,8 +31,8 @@ const Auth = async (req: Request, res: Response, next: NextFunction) => {
     const decoded = jwt.verify(token, secretKey) as {
       id?: string;
       role?: 'user' | 'admin';
-      username?: string;
-      admin_name?: string;
+      email?: string;
+      
     };
 
     console.log('Decoded Token:', decoded);
@@ -52,13 +52,13 @@ const Auth = async (req: Request, res: Response, next: NextFunction) => {
       req.user = {
         id: decoded.id,
         role: 'user',
-        username: decoded.username,
+        email: decoded.email,
       } as UserProps;
     } else if (decoded.role === 'admin') {
       req.user = {
         id: decoded.id,
         role: 'admin',
-        admin_name: decoded.admin_name,
+        email: decoded.email,
       } as AdminProps;
     }
 

@@ -52,12 +52,12 @@ export const registerUserController = async (req: Request, res: Response) => {
 
 
 export const loginController = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
     // Check if the user exists in the users table
-    const queryUser = `SELECT * FROM users WHERE username = $1`;
-    const { rows: userRows } = await pool.query(queryUser, [username]);
+    const queryUser = `SELECT * FROM users WHERE email = $1`;
+    const { rows: userRows } = await pool.query(queryUser, [email]);
 
     if (userRows.length > 0) {
       const user = userRows[0];
@@ -72,7 +72,6 @@ export const loginController = async (req: Request, res: Response) => {
           role: 'user',
           user: {
             user_id: user.id,
-            username: user.username,
             email: user.email,
           },
           token,
@@ -80,13 +79,13 @@ export const loginController = async (req: Request, res: Response) => {
       } else {
         return res
           .status(401)
-          .json({ message: 'Invalid username or password' });
+          .json({ message: 'email or password' });
       }
     }
 
     // Check if the admin exists in the admins table
-    const queryAdmin = `SELECT * FROM admins WHERE admin_name = $1 OR email = $1`;
-    const { rows: adminRows } = await pool.query(queryAdmin, [username]);
+    const queryAdmin = `SELECT * FROM admins WHERE email = $1`;
+    const { rows: adminRows } = await pool.query(queryAdmin, [email]);
 
     if (adminRows.length > 0) {
       const admin = adminRows[0];
@@ -101,7 +100,6 @@ export const loginController = async (req: Request, res: Response) => {
           role: 'admin',
           user: {
             user_id: admin.id,
-            username: admin.admin_name,
             email: admin.email,
           },
           token,
@@ -109,7 +107,7 @@ export const loginController = async (req: Request, res: Response) => {
       } else {
         return res
           .status(401)
-          .json({ message: 'Invalid username or password' });
+          .json({ message: 'Invalid email or password' });
       }
     }
 
