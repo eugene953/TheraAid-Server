@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { getUserProfileById, registerUser } from '../services/userService';
 import pool from '../config/database';
 import bcrypt from 'bcrypt';
-import { userQuery } from '../models/userModel';
-import { UserProps } from '../types/userTypes';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from './mailer';
 import { generateToken } from '../middleware/generatetoken';
@@ -118,6 +116,7 @@ export const loginController = async (req: Request, res: Response) => {
   }
 };
 
+// gets user by user name that when username is enter on the search bar
 export const getUserController = async (req: Request, res: Response) => {
   const { username } = req.params;
 
@@ -134,7 +133,7 @@ export const getUserController = async (req: Request, res: Response) => {
     }
 
     //  Destructuring  id_card_number, password, confirm_pwd
-    const { id_card_number, password, confirm_pwd, ...filteredData } = rows[0];
+    const { name,email, password, ...filteredData } = rows[0];
 
     return res.status(200).send(filteredData);
   } catch (error) {
@@ -142,6 +141,94 @@ export const getUserController = async (req: Request, res: Response) => {
     return res.status(500).send({ error: 'Internal server error.' });
   }
 };
+
+// get user details by id
+export const getUserById = async (req: Request, res: Response) => {
+  const {id} = req.params;
+
+  try {
+    if(!id) {
+      return res.status(400).json({error: 'Invalid user ID'});
+    }
+
+    const query = 'SELECT id,gender, phone_number, username, email, profile FROM users WHERE id =$1';
+    const{rows} = await pool.query(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({error: 'User not found'});
+    }
+
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error('Error fetch user:', error);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+};
+
+
+// edit details
+export const updateUserProfile = async (req: Request, res: Response) => {
+  const userId = req.user?.id; // assuming `req.user` is populated by auth middleware
+
+  const { username, gender, phone_number } = req.body;
+  const file = req.file;
+
+  try {
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let index = 1;
+
+    if (username) {
+      fields.push(`username = $${index++}`);
+      values.push(username);
+    }
+
+    if (gender) {
+      fields.push(`gender = $${index++}`);
+      values.push(gender);
+    }
+
+    if (phone_number) {
+      fields.push(`phone_number = $${index++}`);
+      values.push(phone_number);
+    }
+
+    if (file?.path) {
+      fields.push(`profile = $${index++}`);
+      values.push(file.path);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const query = `
+      UPDATE users
+      SET ${fields.join(', ')}
+      WHERE id = $${index}
+      RETURNING id, username, email, profile, gender, phone_number;
+    `;
+    values.push(userId);
+
+    const { rows } = await pool.query(query, values);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}; 
+
+
+
 
 export const updateUserController = async (req: Request, res: Response) => {
   try {

@@ -3,6 +3,7 @@ export interface ChatMessage {
     user_id: number;
     message: string;
     response: string;
+    session_id: number;
     timestamp?: Date;
   }
   

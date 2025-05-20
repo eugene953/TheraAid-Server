@@ -15,6 +15,17 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE Reminders (
+    reminderID SERIAL PRIMARY KEY,
+    userID INT NOT NULL,
+    activityType VARCHAR(100) NOT NULL,
+    reminderDay INT NOT NULL CHECK (reminderDay BETWEEN 0 AND 6), -- Sunday=0 ... Saturday=6
+    reminderTime TIME NOT NULL, -- time of day
+    FOREIGN KEY (userID) REFERENCES Users(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_userID ON Reminders(userID);
+CREATE INDEX idx_reminderDay_time ON Reminders(reminderDay, reminderTime);
+
 
 Database Password: Mental Health Chatbot
 

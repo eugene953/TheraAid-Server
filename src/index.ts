@@ -3,9 +3,6 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import { Server } from 'socket.io';
 
 import userRoutes from './routes/userRoutes';
 import options from './utils/swaggerConfig';
@@ -15,11 +12,13 @@ import swaggerUi from 'swagger-ui-express';
 import {
   createResetSessionController,
   generateOTPController,
+  getUserById,
   getUserController,
   getUserProfile,
   registerUserController,
   resetPasswordController,
   updateUserController,
+  updateUserProfile,
   verifyOTPController,
 } from './controllers/userController';
 
@@ -29,27 +28,31 @@ import { upload } from './utils/Cloudinary';
 
 
 import {
-  deleteAuctionController,
   deleteUserController,
   getAllUsersController,
   registerAdminController,
 } from './controllers/adminControllers/adminController';
 import { sendEmail } from './controllers/mailer';
-import authorizeRole from './middleware/authoriseMiddleware';
-import { handleChat } from './controllers/chatController';
-// import { registerMail } from './controllers/mailer';
+import { handleChat, handleStartChatSession } from './controllers/chatController';
+import { handleGetUserHistory } from './controllers/historyController';
+import chatRoutes from './routes/chatRoutes';
+import { feedbackController } from './controllers/Feedback';
+import { setupWebSocket } from './utils/webSocket';
+import WebSocket from 'ws';
+import { createReminder, deleteReminder } from './controllers/reminderController';
+import './utils/cronJob';
+
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
 
+// WebSocket setup (ws)
+const wss = new WebSocket.Server({ server });
+setupWebSocket(wss);
+
+//middleware
 const PORT = Number(process.env.PORT) || 3002;
 
 app.use(cors({ origin: 'http://localhost:3002' }));
@@ -86,10 +89,54 @@ app.get('/api/user/:username', async (req: Request, res: Response) => {
   try {
     await getUserController(req, res);
   } catch (error) {
-    console.error('Error fetching auctions:', error);
-    res.status(500).json({ message: 'Error fetching auctions' });
+    console.error('Error fetching user name:', error);
+    res.status(500).json({ message: 'Error fetching user name' });
   }
 });
+
+
+app.get(
+ '/user/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getUserById(req, res);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      res.status(500).json({ message: 'Error fetching user details' });
+    }
+  })
+);
+
+// edit details 
+app.patch(
+  '/user/update-profile',
+   asyncHandler(Auth),
+   upload.single('profile'),
+   asyncHandler(async (req: Request, res: Response): Promise<void> => {
+     try {
+       await updateUserProfile(req, res);
+     } catch (error) {
+       console.error('Error fetching user details:', error);
+       res.status(500).json({ message: 'Error fetching user details' });
+     }
+   })
+ );
+
+ // feedbacks
+ app.post(
+  '/api/feedback',
+   asyncHandler(Auth),
+   asyncHandler(async (req: Request, res: Response): Promise<void> => {
+     try {
+       await feedbackController(req, res);
+     } catch (error) {
+       console.error('Error posting feedback:', error);
+       res.status(500).json({ message: 'Error giving feedback' });
+     }
+   })
+ );
+
 
 app.put(
   '/api/updateUser',
@@ -231,6 +278,13 @@ app.post(
   /**  chat Routes */
 }
 
+app.use('/chat', chatRoutes);
+
+app.post("/startChatSession",
+  asyncHandler(Auth),
+  asyncHandler(handleStartChatSession)
+);
+
 app.post('/api/chat',
   asyncHandler(Auth),
   asyncHandler( async (req: Request, res: Response) => {
@@ -241,22 +295,38 @@ app.post('/api/chat',
     }
   })
 );
- 
 
-// Set up Socket.IO event listeners
-io.on('connection', (socket) => {
-  console.log('A user connected', socket.id);
+app.get('/chat/history/:user_id', 
+  asyncHandler(Auth),
+  asyncHandler(handleGetUserHistory)
+);
 
+// reminder
+app.post(
+  '/api/reminder',
+  asyncHandler(Auth),
+  asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      await createReminder(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating reminder', error });
+    }
+  })
+);
 
-
-  // Handle disconnections
-  socket.on('disconnect', () => {
-    console.log('User disconnected', socket.id);
-  });
-});
-
-// handle import to io and bidUpdates
-export { io };
+app.post(
+ 'api/reminders/:reminderID',
+  asyncHandler(Auth),
+  asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      await deleteReminder(req, res);
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting Reminder', error });
+    }
+  })
+);
 
 server.listen(PORT,'0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);

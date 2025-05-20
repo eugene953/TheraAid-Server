@@ -9,6 +9,8 @@ import {
   updateUserController,
   resetPasswordController,
   getUserProfile,
+  getUserById,
+  updateUserProfile,
 } from '../controllers/userController';
 
 import Auth, { localVariables } from '../middleware/authMiddleware';
@@ -19,6 +21,7 @@ import {
 } from '../controllers/adminControllers/adminController';
 import { upload } from '../utils/Cloudinary';
 import { sendEmail } from '../controllers/mailer';
+import { feedbackController } from '../controllers/Feedback';
 // import { registerMail } from '../controllers/mailer';
 
 const router = express.Router();
@@ -160,6 +163,53 @@ router.get('api/user/:username', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'An unexpected error occurred', error });
   }
 });
+
+
+// get user details by id
+router.get(
+  '/user/:id',
+   asyncHandler(Auth),
+   asyncHandler(async (req: Request, res: Response): Promise<void> => {
+     try {
+       await getUserById(req, res);
+     } catch (error) {
+       console.error('Error fetching user details:', error);
+       res.status(500).json({ message: 'Error fetching user details' });
+     }
+   })
+ );
+
+// edit details 
+router.patch(
+  '/user/update-profile',
+   asyncHandler(Auth),
+   upload.single('profile'),
+   asyncHandler(async (req: Request, res: Response): Promise<void> => {
+     try {
+       await updateUserProfile(req, res);
+     } catch (error) {
+       console.error('Error fetching user details:', error);
+       res.status(500).json({ message: 'Error fetching user details' });
+     }
+   })
+ );
+
+ // feedbacks
+ router.post(
+  '/feedback',
+   asyncHandler(Auth),
+   asyncHandler(async (req: Request, res: Response): Promise<void> => {
+     try {
+       await feedbackController(req, res);
+     } catch (error) {
+       console.error('Error posting feedback:', error);
+       res.status(500).json({ message: 'Error giving feedback' });
+     }
+   })
+ );
+
+
+
 
 /**
  * @swagger
