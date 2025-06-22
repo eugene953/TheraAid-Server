@@ -62,7 +62,7 @@ const wss = new WebSocket.Server({ server });
 setupWebSocket(wss);
 
 //middleware
-const PORT = Number(process.env.PORT) || 3002;
+const PORT = parseInt(process.env.PORT || '3002', 10);
 
 app.use(cors({ origin: 'http://localhost:3002' }));
 app.use(express.json());
@@ -378,7 +378,7 @@ app.post(
 
 //deleteReminder
 app.post(
-  'api/reminders/:reminderID',
+  '/api/reminders/:reminderID',
   asyncHandler(Auth),
   asyncHandler(async (req: Request, res: Response) => {
     try {
