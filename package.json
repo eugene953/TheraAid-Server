@@ -39,6 +39,7 @@
   "scripts": {
     "server-pre": "npm install && npm install --prefix server",
     "start": "nodemon --exec ts-node src/index.ts",
+    "start:prod": "ts-node src/index.ts",
     "build:prod": "npm run build && (cd server && npm run build)",
     "check-types": "tsc --pretty --noEmit",
     "check-format": "prettier --check .",
