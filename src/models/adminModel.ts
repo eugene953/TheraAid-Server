@@ -17,12 +17,7 @@ export const adminQuery = async (
       RETURNING *;
     `;
 
-    const values = [
-      admin_name,
-      email,
-      hashedPassword,
-      'admin',
-    ];
+    const values = [admin_name, email, hashedPassword, 'admin'];
 
     const { rows } = await pool.query(query, values);
     return rows[0];

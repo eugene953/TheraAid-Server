@@ -32,7 +32,6 @@ const Auth = async (req: Request, res: Response, next: NextFunction) => {
       id?: string;
       role?: 'user' | 'admin';
       email?: string;
-      
     };
 
     console.log('Decoded Token:', decoded);

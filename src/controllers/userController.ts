@@ -20,7 +20,7 @@ export const registerUserController = async (req: Request, res: Response) => {
     // Send a welcome email to the registered user's email
     const subject = 'Welcome to TheraAid!';
     const text = `Hello ${newUser.username}, welcome to TheraAid! We're glad to have you as part of our mental wellness community.`;
-    
+
     const html = `
       <h1>Welcome, ${newUser.username}!</h1>
       <p>Thank you for registering at <strong>TheraAid</strong>. You're now part of a safe space dedicated to supporting mental health through multilingual chat assistance.</p>
@@ -29,7 +29,7 @@ export const registerUserController = async (req: Request, res: Response) => {
          <a href="mailto:nfouaeugene@gmail.com">nfouaeugene@gmail.com</a>.</p>
       <p><strong>You're not alone — we're here for you.</strong></p>
     `;
-    
+
     // Call the sendEmail function to send the email
     await sendEmail(newUser.email, subject, text, html);
 
@@ -47,7 +47,6 @@ export const registerUserController = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 export const loginController = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -75,9 +74,7 @@ export const loginController = async (req: Request, res: Response) => {
           token,
         });
       } else {
-        return res
-          .status(401)
-          .json({ message: 'email or password' });
+        return res.status(401).json({ message: 'email or password' });
       }
     }
 
@@ -103,9 +100,7 @@ export const loginController = async (req: Request, res: Response) => {
           token,
         });
       } else {
-        return res
-          .status(401)
-          .json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid email or password' });
       }
     }
 
@@ -133,7 +128,7 @@ export const getUserController = async (req: Request, res: Response) => {
     }
 
     //  Destructuring  id_card_number, password, confirm_pwd
-    const { name,email, password, ...filteredData } = rows[0];
+    const { name, email, password, ...filteredData } = rows[0];
 
     return res.status(200).send(filteredData);
   } catch (error) {
@@ -144,27 +139,27 @@ export const getUserController = async (req: Request, res: Response) => {
 
 // get user details by id
 export const getUserById = async (req: Request, res: Response) => {
-  const {id} = req.params;
+  const { id } = req.params;
 
   try {
-    if(!id) {
-      return res.status(400).json({error: 'Invalid user ID'});
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid user ID' });
     }
 
-    const query = 'SELECT id,gender, phone_number, username, email, profile FROM users WHERE id =$1';
-    const{rows} = await pool.query(query, [id]);
+    const query =
+      'SELECT id,gender, phone_number, username, email, profile FROM users WHERE id =$1';
+    const { rows } = await pool.query(query, [id]);
 
     if (rows.length === 0) {
-      return res.status(404).json({error: 'User not found'});
+      return res.status(404).json({ error: 'User not found' });
     }
 
     return res.status(200).json(rows[0]);
   } catch (error) {
     console.error('Error fetch user:', error);
-    return res.status(500).json({error: 'Internal server error'});
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // edit details
 export const updateUserProfile = async (req: Request, res: Response) => {
@@ -225,10 +220,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     console.error('Error updating user:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-}; 
-
-
-
+};
 
 export const updateUserController = async (req: Request, res: Response) => {
   try {

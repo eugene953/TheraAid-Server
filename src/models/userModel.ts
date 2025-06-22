@@ -9,22 +9,16 @@ export const userQuery = async (
   userData: UserProps,
   file?: Express.Multer.File
 ): Promise<UserProps> => {
-  const {
-    username,
-    email,
-    password,
-    phone_number,
-    gender,
-  } = userData;
+  const { username, email, password, phone_number, gender } = userData;
 
   let profilePath: string | null = null;
 
-    if (file) {
-      // Cloudinary automatically uploads via Multer's storage configuration
+  if (file) {
+    // Cloudinary automatically uploads via Multer's storage configuration
     profilePath = file.path;
-    }
-   
-try{
+  }
+
+  try {
     // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -38,7 +32,15 @@ try{
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *;
       `;
-      values = [username, email, hashedPassword, phone_number, gender, profilePath, 'user'];
+      values = [
+        username,
+        email,
+        hashedPassword,
+        phone_number,
+        gender,
+        profilePath,
+        'user',
+      ];
     } else {
       query = `
         INSERT INTO users (username, email, password, phone_number, gender, role)

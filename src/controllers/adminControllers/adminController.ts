@@ -18,12 +18,35 @@ export const registerAdminController = async (req: Request, res: Response) => {
   }
 };
 
+// get admin details by id
+export const getAdminById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid admin ID' });
+    }
+
+    const query = 'SELECT id, admin_name, email FROM admins WHERE id =$1';
+    const { rows } = await pool.query(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
+
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error('Error fetch admin:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 {
   /** Handling users*/
 }
 export const getAllUsersController = async (req: Request, res: Response) => {
   try {
-    const query = `SELECT id, username, email, phone_number, id_card_number, address, profile FROM users;`;
+    const query = `SELECT id, username, email, phone_number, profile FROM users;`;
     const { rows } = await pool.query(query);
 
     res.status(200).json(rows);
@@ -56,43 +79,89 @@ export const deleteUserController = async (req: Request, res: Response) => {
   }
 };
 
-{
-  /** Handling auctions*/
-}
-export const getAllAuctionsController = async (req: Request, res: Response) => {
+export const getUserReminderController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const query = `SELECT  id, title, description, grade, start_bid, start_date,
-                      end_date, user_id, image FROM auctions
-                      ORDER BY created_at DESC;
-                      ;`;
-    const { rows: auctions } = await pool.query(query);
+    const query = `
+    SELECT
+    u.username,
+    r.activityType,
+    r.reminderDay,
+    r.reminderTime
+    FROM reminders r
+    JOIN users u ON r.userID = u.id
+     ORDER BY u.username, r.reminderTime;
+    `;
+    const { rows } = await pool.query(query);
 
-    res.status(200).json(auctions);
+    if (rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: 'No reminders found for this user' });
+    }
+
+    res.status(200).json(rows);
   } catch (error) {
-    console.error('Error fetching auctions:', error);
-    res.status(500).json({ message: 'Error fetching auctions:', error });
+    console.error('Error fetching reminders', error);
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 
-export const deleteAuctionController = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
+export const getUserFeedbackController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    // Check if auction exists before deleting
-    const checkQuery = 'SELECT * FROM auctions WHERE id = $1';
-    const { rowCount } = await pool.query(checkQuery, [id]);
+    const query = `
+    SELECT
+    u.username,
+    f.rating,
+    f.message
+    FROM Feedbacks f
+    JOIN users u ON f.user_id = u.id
+     ORDER BY u.username, f.message;
+    `;
+    const { rows } = await pool.query(query);
 
-    if (rowCount === 0) {
-      return res.status(404).json({ message: 'Auction not found' });
+    if (rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: 'No feedback found for this user' });
     }
 
-    // Delete the auction
-    const deleteQuery = 'DELETE FROM auctions WHERE id = $1';
-    await pool.query(deleteQuery, [id]);
-
-    res.status(200).json({ message: 'auction deleted successfully' });
+    res.status(200).json(rows);
   } catch (error) {
-    console.error('Error deleting auction:', error);
-    res.status(500).json({ message: 'An unexpected error occurred', error });
+    console.error('Error fetching feedback', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+//user engagement
+export const getUserEngagementReportController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const query = `
+      SELECT 
+        u.username,
+        COUNT(c.session_id) AS total_sessions,
+        COALESCE(
+          ROUND(AVG(EXTRACT(EPOCH FROM (c.end_time - c.start_time)) / 60), 2),
+          0
+        ) AS avg_duration_minutes
+      FROM chatsession c
+      JOIN users u ON c.user_id = u.id
+      GROUP BY u.username
+      ORDER BY total_sessions DESC;
+    `;
+
+    const { rows } = await pool.query(query);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error generating engagement report:', error);
+    res.status(500).json({ message: 'Server error', error });
   }
 };

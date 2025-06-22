@@ -1,9 +1,11 @@
-import { Request, Response } from "express";
-import pool from "../config/database";
-import { ChatSession } from "../types/chatSession";
+import { Request, Response } from 'express';
+import pool from '../config/database';
+import { ChatSession } from '../types/chatSession';
 
 // Start or reuse a chat session based on time conditions
-export const createChatSession = async (user_id: number): Promise<ChatSession> => {
+export const createChatSession = async (
+  user_id: number
+): Promise<ChatSession> => {
   const result = await pool.query(
     `SELECT session_id, start_time, end_time, date
      FROM chatsession
@@ -25,6 +27,16 @@ export const createChatSession = async (user_id: number): Promise<ChatSession> =
       return latest;
     }
 
+    // Mark session as expired if beyond 12 hours and end_time is null
+    if (diffHours > 12 && diffHours <= 15) {
+      await pool.query(
+        `UPDATE chatsession 
+         SET end_time = NOW() 
+         WHERE session_id = $1`,
+        [latest.session_id]
+      );
+    }
+
     // Reuse expired session within 3-hour grace period
     if (diffHours > 12 && diffHours <= 15) {
       return latest;
@@ -41,4 +53,3 @@ export const createChatSession = async (user_id: number): Promise<ChatSession> =
 
   return createResult.rows[0];
 };
-

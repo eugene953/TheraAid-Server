@@ -6,7 +6,8 @@ import { handleGetUserHistory } from '../controllers/historyController';
 
 const router = express.Router();
 
-router.get('/chat/history/:user_id', 
+router.get(
+  '/chat/history/:user_id',
   asyncHandler(Auth),
   asyncHandler(handleGetUserHistory)
 );

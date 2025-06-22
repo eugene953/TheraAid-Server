@@ -2,9 +2,10 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Kako API',
+      title: 'TheraAid API',
       version: '1.0.0',
-      description: 'API documentation for the Kako Auction platform',
+      description:
+        'API documentation for the TheraAid Mental Health Support Application',
     },
     servers: [
       {

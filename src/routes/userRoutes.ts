@@ -36,26 +36,29 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - phone_number
+ *               - gender
  *             properties:
  *               username:
  *                 type: string
  *               email:
  *                 type: string
- *               phone_number:
- *                 type: string
- *               id_card_number:
- *                 type: number
- *               address:
- *                 type: string
  *               password:
  *                 type: string
- *               confirm_pwd:
+ *               phone_number:
+ *                 type: string
+ *               gender:
  *                 type: string
  *               profile:
  *                 type: string
+ *                 format: binary
  *                 nullable: true
  *     responses:
  *       200:
@@ -65,6 +68,7 @@ const router = express.Router();
  *       500:
  *         description: Internal Server Error
  */
+
 router.post(
   '/api/users/register',
   upload.single('profile'),
@@ -91,7 +95,7 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               email:
  *                 type: string
  *               password:
  *                 type: string
@@ -164,52 +168,81 @@ router.get('api/user/:username', async (req: Request, res: Response) => {
   }
 });
 
-
 // get user details by id
 router.get(
   '/user/:id',
-   asyncHandler(Auth),
-   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-     try {
-       await getUserById(req, res);
-     } catch (error) {
-       console.error('Error fetching user details:', error);
-       res.status(500).json({ message: 'Error fetching user details' });
-     }
-   })
- );
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getUserById(req, res);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      res.status(500).json({ message: 'Error fetching user details' });
+    }
+  })
+);
 
-// edit details 
+// edit details
 router.patch(
   '/user/update-profile',
-   asyncHandler(Auth),
-   upload.single('profile'),
-   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-     try {
-       await updateUserProfile(req, res);
-     } catch (error) {
-       console.error('Error fetching user details:', error);
-       res.status(500).json({ message: 'Error fetching user details' });
-     }
-   })
- );
+  asyncHandler(Auth),
+  upload.single('profile'),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await updateUserProfile(req, res);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      res.status(500).json({ message: 'Error fetching user details' });
+    }
+  })
+);
 
- // feedbacks
- router.post(
+/**
+ * @swagger
+ * /api/feedback:
+ *   post:
+ *     summary: Submit feedback from a user
+ *     tags:
+ *       - Feedback
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 example: 1
+ *               rating:
+ *                 type: integer
+ *                 example: 4
+ *               message:
+ *                 type: string
+ *                 example: "Very helpful app!"
+ *     responses:
+ *       201:
+ *         description: Feedback submitted successfully
+ *       401:
+ *         description: Unauthorized – paste token in the Authorize section (top right)
+ *       500:
+ *         description: Internal Server Error
+ */
+// feedbacks
+router.post(
   '/feedback',
-   asyncHandler(Auth),
-   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-     try {
-       await feedbackController(req, res);
-     } catch (error) {
-       console.error('Error posting feedback:', error);
-       res.status(500).json({ message: 'Error giving feedback' });
-     }
-   })
- );
-
-
-
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await feedbackController(req, res);
+    } catch (error) {
+      console.error('Error posting feedback:', error);
+      res.status(500).json({ message: 'Error giving feedback' });
+    }
+  })
+);
 
 /**
  * @swagger
@@ -284,31 +317,6 @@ router.put(
   })
 );
 
-/** get methods */
-router.get(
-  '/api/getAllUsers',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await getAllUsersController(req, res);
-    } catch (error) {
-      console.error('Error getting all users:', error);
-      res.status(500).json({ message: 'Error getting all users' });
-    }
-  }
-);
-
-router.delete(
-  '/api/deleteUser/:id',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await deleteUserController(req, res);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      res.status(500).json({ message: 'Error deleting user' });
-    }
-  }
-);
-
 // Route to fetch user by ID
 router.get(
   '/getUserProfileById/:id',
@@ -327,10 +335,6 @@ router.get(
     }
   })
 );
-
-/**router.route('/registerMail').post((req:Request, res:Response) => {
-    res.json('register route')
-}); */
 
 router.post(
   '/generateOTP',
@@ -401,17 +405,4 @@ router.post(
   }
 );
 
-{
-  /**
-   router.post( '/registerMail',
-    async (req: Request, res: Response): Promise<void> => {
-       try {
-         await registerMail(req, res);
-       } catch (error) {
-         console.error('Error registering mail', error);
-         res.status(500).json({ message: 'Error registering mail' });
-       }
-     });
- */
-}
 export default router;

@@ -1,5 +1,4 @@
-import pool from "../config/database";
-
+import pool from '../config/database';
 
 export const getUserChatSessions = async (user_id: number): Promise<any[]> => {
   const result = await pool.query(

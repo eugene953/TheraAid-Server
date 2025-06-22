@@ -26,22 +26,31 @@ import Auth, { localVariables } from './middleware/authMiddleware';
 import { asyncHandler } from './utils/asyncHandler';
 import { upload } from './utils/Cloudinary';
 
-
 import {
   deleteUserController,
+  getAdminById,
   getAllUsersController,
+  getUserEngagementReportController,
+  getUserFeedbackController,
+  getUserReminderController,
   registerAdminController,
 } from './controllers/adminControllers/adminController';
 import { sendEmail } from './controllers/mailer';
-import { handleChat, handleStartChatSession } from './controllers/chatController';
+import {
+  handleChat,
+  handleGetMessagesBySession,
+  handleStartChatSession,
+} from './controllers/chatController';
 import { handleGetUserHistory } from './controllers/historyController';
 import chatRoutes from './routes/chatRoutes';
 import { feedbackController } from './controllers/Feedback';
 import { setupWebSocket } from './utils/webSocket';
 import WebSocket from 'ws';
-import { createReminder, deleteReminder } from './controllers/reminderController';
+import {
+  createReminder,
+  deleteReminder,
+} from './controllers/reminderController';
 import './utils/cronJob';
-
 
 dotenv.config();
 
@@ -62,7 +71,6 @@ app.use(morgan('tiny'));
 // Swagger setup
 const swaggerDocs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 
 {
   /** user authentication Routes */
@@ -94,9 +102,8 @@ app.get('/api/user/:username', async (req: Request, res: Response) => {
   }
 });
 
-
 app.get(
- '/user/:id',
+  '/user/:id',
   asyncHandler(Auth),
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     try {
@@ -108,35 +115,34 @@ app.get(
   })
 );
 
-// edit details 
+// edit details
 app.patch(
   '/user/update-profile',
-   asyncHandler(Auth),
-   upload.single('profile'),
-   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-     try {
-       await updateUserProfile(req, res);
-     } catch (error) {
-       console.error('Error fetching user details:', error);
-       res.status(500).json({ message: 'Error fetching user details' });
-     }
-   })
- );
+  asyncHandler(Auth),
+  upload.single('profile'),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await updateUserProfile(req, res);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      res.status(500).json({ message: 'Error fetching user details' });
+    }
+  })
+);
 
- // feedbacks
- app.post(
+// feedbacks
+app.post(
   '/api/feedback',
-   asyncHandler(Auth),
-   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-     try {
-       await feedbackController(req, res);
-     } catch (error) {
-       console.error('Error posting feedback:', error);
-       res.status(500).json({ message: 'Error giving feedback' });
-     }
-   })
- );
-
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await feedbackController(req, res);
+    } catch (error) {
+      console.error('Error posting feedback:', error);
+      res.status(500).json({ message: 'Error giving feedback' });
+    }
+  })
+);
 
 app.put(
   '/api/updateUser',
@@ -149,30 +155,6 @@ app.put(
       res.status(500).json({ message: 'Error fetching auctions' });
     }
   })
-);
-
-app.get(
-  '/api/getAllUsers',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await getAllUsersController(req, res);
-    } catch (error) {
-      console.error('Error getting all users:', error);
-      res.status(500).json({ message: 'Error getting all users' });
-    }
-  }
-);
-
-app.delete(
-  '/api/deleteUser/:id',
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      await deleteUserController(req, res);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      res.status(500).json({ message: 'Error deleting user' });
-    }
-  }
 );
 
 // Route to fetch user by ID
@@ -257,7 +239,6 @@ app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-
 {
   /**  admin Routes */
 }
@@ -273,6 +254,78 @@ app.post(
   }
 );
 
+app.get(
+  '/admin/:id',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAdminById(req, res);
+    } catch (error) {
+      console.error('Error fetching admin details:', error);
+      res.status(500).json({ message: 'Error fetching admin details' });
+    }
+  })
+);
+
+app.get(
+  '/api/getAllUsers',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getAllUsersController(req, res);
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      res.status(500).json({ message: 'Error getting all users' });
+    }
+  }
+);
+
+app.delete(
+  '/api/deleteUser/:id',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await deleteUserController(req, res);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Error deleting user' });
+    }
+  }
+);
+
+app.get(
+  '/api/getUserReminder',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getUserReminderController(req, res);
+    } catch (error) {
+      console.error('Error getting user reminders:', error);
+      res.status(500).json({ message: 'Error getting user reminders' });
+    }
+  }
+);
+
+app.get(
+  '/api/getUserFeedback',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getUserFeedbackController(req, res);
+    } catch (error) {
+      console.error('Error getting user feedback:', error);
+      res.status(500).json({ message: 'Error getting user feedback' });
+    }
+  }
+);
+
+app.get(
+  '/api/userEngagement',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await getUserEngagementReportController(req, res);
+    } catch (error) {
+      console.error('Error getting user feedback:', error);
+      res.status(500).json({ message: 'Error getting user feedback' });
+    }
+  }
+);
 
 {
   /**  chat Routes */
@@ -280,14 +333,22 @@ app.post(
 
 app.use('/chat', chatRoutes);
 
-app.post("/startChatSession",
+app.post(
+  '/startChatSession',
   asyncHandler(Auth),
   asyncHandler(handleStartChatSession)
 );
 
-app.post('/api/chat',
+app.get(
+  '/chat/messages/:session_id',
   asyncHandler(Auth),
-  asyncHandler( async (req: Request, res: Response) => {
+  asyncHandler(handleGetMessagesBySession)
+);
+
+app.post(
+  '/api/chat',
+  asyncHandler(Auth),
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       await handleChat(req, res);
     } catch (error) {
@@ -296,7 +357,8 @@ app.post('/api/chat',
   })
 );
 
-app.get('/chat/history/:user_id', 
+app.get(
+  '/chat/history/:user_id',
   asyncHandler(Auth),
   asyncHandler(handleGetUserHistory)
 );
@@ -305,8 +367,7 @@ app.get('/chat/history/:user_id',
 app.post(
   '/api/reminder',
   asyncHandler(Auth),
-  asyncHandler(
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       await createReminder(req, res);
     } catch (error) {
@@ -315,11 +376,11 @@ app.post(
   })
 );
 
+//deleteReminder
 app.post(
- 'api/reminders/:reminderID',
+  'api/reminders/:reminderID',
   asyncHandler(Auth),
-  asyncHandler(
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       await deleteReminder(req, res);
     } catch (error) {
@@ -328,6 +389,7 @@ app.post(
   })
 );
 
-server.listen(PORT,'0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });

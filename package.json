@@ -50,7 +50,7 @@
     "lint": "eslint ./src",
     "lint:debug": "eslint ./src --debug",
     "lint:fix": "eslint ./src --fix",
-     "ngrok": "ngrok http 3002"
+    "ngrok": "ngrok http 3002"
   },
   "config": {
     "commitizen": {
