@@ -47,14 +47,16 @@ export const handleChat = async (req: Request, res: Response) => {
     // Save chat to DB
     await savechat({ user_id, message, response: responseText, session_id });
 
-    // ✅ Only check if any Rasa response includes 'na emergency' and refer the user to
+    // ✅ Only check if any Rasa response includes 'Ya ki pei ta si fou shi, A ne ya tomcorn na professionals (suicider thoughts)' and refer the user to
     const rasaTexts = rasaResponse.data
       .map((r: any) => r.text?.toLowerCase())
       .filter(Boolean);
 
-    const needsReferral = rasaTexts.some((text: string) =>
-      text.includes('na emergency')
-    );
+   const referralTriggerPhrase = 'ya ki pei ta si fou shi, a ne ya tomcorn na professionals';
+
+const needsReferral = rasaTexts.some((text: string) =>
+  text.replace(/\s+/g, ' ').trim().includes(referralTriggerPhrase)
+);
 
     if (needsReferral) {
       const userResult = await pool.query(

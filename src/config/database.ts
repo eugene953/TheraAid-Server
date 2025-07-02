@@ -1,3 +1,4 @@
+
 import { Pool, PoolClient } from 'pg';
 import dotenv from 'dotenv';
 
@@ -27,4 +28,4 @@ pool.connect(
   }
 );
 
-export default pool;
+export default pool

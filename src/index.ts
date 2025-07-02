@@ -13,6 +13,7 @@ import {
   createResetSessionController,
   generateOTPController,
   getUserById,
+  loginController,
   getUserController,
   getUserProfile,
   registerUserController,
@@ -63,8 +64,8 @@ setupWebSocket(wss);
 
 //middleware
 const PORT = parseInt(process.env.PORT || '3002', 10);
-
-app.use(cors({ origin: 'http://localhost:3002' }));
+// app.use(cors({ origin: 'http://localhost:3002' }));
+app.use(cors({ origin: '*' })); 
 app.use(express.json());
 app.use(morgan('tiny'));
 
@@ -89,8 +90,13 @@ app.post(
   }
 );
 
-app.post('/api/users/login', (req: Request, res: Response) => {
-  res.send('User API is running!');
+app.post('/api/users/login', async (req: Request, res: Response) => {
+  try {
+    await loginController(req, res);
+  } catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ message: 'An unexpected error occurred', error });
+  }
 });
 
 app.get('/api/user/:username', async (req: Request, res: Response) => {
@@ -391,5 +397,5 @@ app.post(
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
-  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+  console.log(`Swagger docs available at /api-docs`);
 });
